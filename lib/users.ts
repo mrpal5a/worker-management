@@ -1,4 +1,5 @@
 import 'server-only';
+import { createClient } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import type { Role } from './session';
 
@@ -35,7 +36,24 @@ interface ProfileRow {
  * which addresses have accounts.
  */
 export async function verifyCredentials(email: string, password: string): Promise<string | null> {
-  const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
+  // A throwaway client, NOT the shared one.
+  //
+  // signInWithPassword mutates the client it is called on: afterwards that
+  // client sends the signed-in user's JWT instead of the service_role key.
+  // Since the migration revokes all privileges from the `authenticated` role,
+  // the shared singleton would start failing every query with "permission
+  // denied" — for every request in the process, not just this user's.
+  //
+  // This client is discarded as soon as the check is done.
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
+
+  const authClient = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data, error } = await authClient.auth.signInWithPassword({ email, password });
   if (error || !data.user) return null;
   return data.user.id;
 }
