@@ -25,12 +25,12 @@ export default async function CompanyReportPage({
   const detail = rows.filter((r) => r.companyId === companyId);
 
   return (
-    <main className="mx-auto max-w-4xl p-4 sm:p-6">
+    <main className="mx-auto max-w-5xl p-4 sm:p-6">
       <h1 className="mb-1 text-2xl font-semibold">Company Report</h1>
-      <p className="mb-6 text-sm text-gray-500">{monthLabel(year, month)}</p>
+      <p className="mb-6 text-sm text-text-muted">{monthLabel(year, month)}</p>
 
       <MonthPicker year={year} month={month}>
-        <select name="companyId" defaultValue={companyId} className="rounded border px-3 py-2">
+        <select name="companyId" defaultValue={companyId} className="min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8">
           {[...agg.byCompany.values()].map((b) => (
             <option key={b.id} value={b.id}>
               {b.name}
@@ -40,13 +40,13 @@ export default async function CompanyReportPage({
       </MonthPicker>
 
       {!bucket ? (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-text-muted">
           No attendance recorded for {monthLabel(year, month)}.
         </p>
       ) : (
         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <table className="w-full min-w-[32rem] text-left text-sm">
-          <thead className="border-b">
+          <table className="tabular w-full min-w-[32rem] text-left text-sm">
+          <thead className="border-b border-border-base">
             <tr>
               <th className="py-2">Date</th>
               <th>Worker</th>
@@ -62,7 +62,7 @@ export default async function CompanyReportPage({
                 otHours: r.otHours,
               });
               return (
-                <tr key={`${r.dateKey}-${r.workerId}`} className="border-b">
+                <tr key={`${r.dateKey}-${r.workerId}`} className="border-b border-border-base">
                   <td className="py-2">{r.dateKey}</td>
                   <td>{r.workerName}</td>
                   <td className="text-right">{hours(r.otHours)}</td>

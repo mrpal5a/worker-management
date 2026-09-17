@@ -25,7 +25,7 @@ export function LoginForm() {
         required
         autoFocus
         autoComplete="username"
-        className="min-h-11 w-full rounded border px-3 py-2"
+        className="w-full min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
       />
       <input
         name="password"
@@ -33,16 +33,16 @@ export function LoginForm() {
         placeholder="Password"
         required
         autoComplete="current-password"
-        className="min-h-11 w-full rounded border px-3 py-2"
+        className="w-full min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
       />
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+        className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover disabled:opacity-50 sm:min-h-9"
       >
         {pending ? 'Signing in…' : 'Sign in'}
       </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </form>
   );
 }

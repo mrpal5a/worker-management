@@ -141,6 +141,29 @@ server-only: it carries no `NEXT_PUBLIC_` prefix, and `lib/supabase.ts` imports
 `server-only`, so importing it from a client component fails the build rather
 than leaking the key to the browser.
 
+## Theming
+
+Light is the default. The device's `prefers-color-scheme` is deliberately
+ignored — dark is used only when the user picks it.
+
+The chosen theme is stored in a **cookie**, not `localStorage`. Every page here
+is `force-dynamic` and server-rendered, so a theme applied by client-side
+JavaScript would paint light and then correct itself — a visible flash on every
+navigation, not just the first load. Reading the cookie on the server puts
+`class="dark"` on `<html>` in the first byte of HTML instead.
+
+Colours are semantic tokens declared once in `app/globals.css`, with a light set
+on `:root` and a dark set under `.dark` — `--surface`, `--border`, `--text`,
+`--accent` and so on. To change a colour, edit that one file; nothing else
+hard-codes a hex value.
+
+Density follows the breakpoint: interactive controls are 36–44px tall on phones,
+where a mis-tap picks the wrong company and bills the wrong client, and tighten
+to spreadsheet density from `sm:` up where a pointer makes precision free.
+
+Below `sm` the navigation collapses into a hamburger drawer; above it, the
+horizontal bar remains.
+
 ## Architecture
 
 All money calculation lives in `lib/payroll.ts` as pure functions with no
@@ -157,6 +180,8 @@ tested exhaustively without fixtures. Everything else is arranged around it.
 | `lib/session.ts` | HMAC-signed session tokens. |
 | `lib/auth.ts` | Authorisation predicates. Pure. |
 | `lib/users.ts` | Accounts, over Supabase Auth. |
+| `lib/theme.ts` | Theme resolution. Pure. |
+| `components/ui/` | Shared buttons, fields, tables. |
 | `app/actions/` | Server actions. |
 
 That boundary was tested in practice: the database layer was replaced wholesale
@@ -173,8 +198,8 @@ day west of UTC and misfile attendance.
 npm test
 ```
 
-74 tests covering the payroll math, aggregation, date handling, numeric
-conversion, session signing, and authorisation.
+85 tests covering the payroll math, aggregation, date handling, numeric
+conversion, session signing, authorisation, and theme resolution.
 
 Two are worth knowing about. A reconciliation invariant asserts that total pay
 plus total margin equals total billing — if the worker-wise and company-wise

@@ -29,26 +29,26 @@ export function UserRow({ id, email, name, role, active, isSelf }: Props) {
   }
 
   return (
-    <li className={`border-b py-3 ${pending ? 'opacity-50' : ''}`}>
+    <li className={`border-b border-border-base py-3 ${pending ? 'opacity-50' : ''}`}>
       <div className="flex flex-wrap items-center gap-2">
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">
             {name || email}
-            {isSelf && <span className="ml-2 text-xs text-gray-500">(you)</span>}
+            {isSelf && <span className="ml-2 text-xs text-text-muted">(you)</span>}
           </div>
-          <div className="truncate text-sm text-gray-500">{email}</div>
+          <div className="truncate text-sm text-text-muted">{email}</div>
         </div>
 
         <span
           className={`rounded px-2 py-1 text-xs ${
-            role === 'admin' ? 'bg-black text-white' : 'bg-gray-100 text-gray-700'
+            role === 'admin' ? 'bg-accent text-accent-fg' : 'bg-surface-sunken text-text-muted'
           }`}
         >
           {role}
         </span>
 
         {!active && (
-          <span className="rounded bg-red-100 px-2 py-1 text-xs text-red-700">inactive</span>
+          <span className="rounded bg-danger/15 px-2 py-1 text-xs text-danger">inactive</span>
         )}
       </div>
 
@@ -57,19 +57,19 @@ export function UserRow({ id, email, name, role, active, isSelf }: Props) {
         <div className="mt-2 flex flex-wrap gap-3 text-sm">
           <button
             onClick={() => run(() => toggleUser(id, !active))}
-            className="min-h-11 text-blue-600 underline"
+            className="min-h-11 text-accent hover:underline"
           >
             {active ? 'Deactivate' : 'Reactivate'}
           </button>
           <button
             onClick={() => run(() => changeRole(id, role === 'admin' ? 'user' : 'admin'))}
-            className="min-h-11 text-blue-600 underline"
+            className="min-h-11 text-accent hover:underline"
           >
             Make {role === 'admin' ? 'user' : 'admin'}
           </button>
           <button
             onClick={() => setResetting((v) => !v)}
-            className="min-h-11 text-blue-600 underline"
+            className="min-h-11 text-accent hover:underline"
           >
             Set password
           </button>
@@ -88,13 +88,13 @@ export function UserRow({ id, email, name, role, active, isSelf }: Props) {
             required
             minLength={8}
             autoComplete="new-password"
-            className="min-h-11 flex-1 rounded border px-3 py-2"
+            className="flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
           />
-          <button className="min-h-11 rounded bg-black px-4 py-2 text-white">Save</button>
+          <button className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover sm:min-h-9">Save</button>
         </form>
       )}
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
     </li>
   );
 }

@@ -24,7 +24,7 @@ export function UserForm() {
   }
 
   return (
-    <div className="mb-8 rounded border p-4">
+    <div className="mb-8 rounded-lg border border-border-base bg-surface-raised p-4">
       <h2 className="mb-3 font-medium">Add an account</h2>
       <form ref={formRef} action={onSubmit} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <input
@@ -33,12 +33,12 @@ export function UserForm() {
           placeholder="Email"
           required
           autoComplete="off"
-          className="min-h-11 flex-1 rounded border px-3 py-2 sm:min-w-48"
+          className="flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8 sm:min-w-48"
         />
         <input
           name="name"
           placeholder="Name"
-          className="min-h-11 flex-1 rounded border px-3 py-2 sm:min-w-32"
+          className="flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8 sm:min-w-32"
         />
         <input
           name="password"
@@ -47,25 +47,25 @@ export function UserForm() {
           required
           minLength={8}
           autoComplete="new-password"
-          className="min-h-11 flex-1 rounded border px-3 py-2 sm:min-w-40"
+          className="flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8 sm:min-w-40"
         />
-        <select name="role" defaultValue="user" className="min-h-11 rounded border px-3 py-2">
+        <select name="role" defaultValue="user" className="min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8">
           <option value="user">User</option>
           <option value="admin">Admin</option>
         </select>
         <button
           type="submit"
           disabled={pending}
-          className="min-h-11 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover disabled:opacity-50 sm:min-h-9"
         >
           {pending ? '…' : 'Create'}
         </button>
       </form>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-      {done && <p className="mt-2 text-sm text-green-700">Account created.</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {done && <p className="mt-2 text-sm text-success">Account created.</p>}
 
-      <p className="mt-3 text-xs text-gray-500">
+      <p className="mt-3 text-xs text-text-muted">
         Tell the person their password directly. There are no reset emails — if
         they forget it, set a new one here.
       </p>

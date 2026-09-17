@@ -22,7 +22,7 @@ export default async function AttendancePage({
   const byWorker = new Map(entries.map((e) => [e.worker_id, e]));
 
   return (
-    <main className="mx-auto max-w-3xl p-4 sm:p-6">
+    <main className="mx-auto max-w-5xl p-4 sm:p-6">
       <h1 className="mb-4 text-2xl font-semibold">Daily Attendance</h1>
 
       <form className="mb-6 flex flex-wrap items-center gap-3">
@@ -30,28 +30,28 @@ export default async function AttendancePage({
           type="date"
           name="date"
           defaultValue={dateKey}
-          className="rounded border px-3 py-2"
+          className="min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
         />
-        <button type="submit" className="rounded bg-black px-4 py-2 text-white">
+        <button type="submit" className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover sm:min-h-9">
           Go
         </button>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-text-muted">
           {entries.length} of {workers.length} present
         </span>
       </form>
 
       {workers.length === 0 ? (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-text-muted">
           No active workers. Add them on the{' '}
-          <Link href="/workers" className="text-blue-600 underline">
+          <Link href="/workers" className="text-accent hover:underline">
             Workers
           </Link>{' '}
           page first.
         </p>
       ) : companies.length === 0 ? (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-text-muted">
           No active companies. Add them on the{' '}
-          <Link href="/companies" className="text-blue-600 underline">
+          <Link href="/companies" className="text-accent hover:underline">
             Companies
           </Link>{' '}
           page first.
@@ -59,7 +59,7 @@ export default async function AttendancePage({
       ) : (
         <>
           {/* Column headings only make sense once the row is a grid. */}
-          <div className="hidden border-b pb-2 text-sm font-medium text-gray-500 sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:gap-3">
+          <div className="hidden border-b pb-2 text-sm font-medium text-text-muted sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:gap-3">
             <div>Worker</div>
             <div>Company</div>
             <div>OT hrs</div>

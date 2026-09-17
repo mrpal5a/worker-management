@@ -27,9 +27,9 @@ export function WorkerForm() {
           name="name"
           placeholder="Name"
           required
-          className="min-w-40 flex-1 rounded border px-3 py-2"
+          className="min-w-40 flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
         />
-        <input name="phone" placeholder="Phone (optional)" className="w-40 rounded border px-3 py-2" />
+        <input name="phone" placeholder="Phone (optional)" className="w-40 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8" />
         <input
           name="payRate"
           type="number"
@@ -37,17 +37,17 @@ export function WorkerForm() {
           min="0"
           placeholder="Day rate"
           required
-          className="w-32 rounded border px-3 py-2"
+          className="w-32 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
         />
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+          className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover disabled:opacity-50 sm:min-h-9"
         >
           {pending ? '…' : 'Add'}
         </button>
       </form>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
     </div>
   );
 }
