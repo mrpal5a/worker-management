@@ -1,5 +1,26 @@
 # Worker Management Implementation Plan
 
+> **STATUS: EXECUTED, WITH DEVIATIONS — 2026-09-18.**
+>
+> This is the plan as written before implementation. It is kept as a record of
+> intent. **It is not an accurate description of the code.** For that, read the
+> spec at `docs/superpowers/specs/2026-09-18-worker-management-design.md`.
+>
+> What actually changed during execution:
+>
+> | Planned | Built | Why |
+> |---|---|---|
+> | Prisma ORM | Supabase JS client | The Postgres password failed authentication. Supabase's HTTPS client needs no password, pooler, or IPv6 route. Removing Prisma also cleared all 4 remaining npm advisories, which lived in its CLI tree. |
+> | `prisma migrate` | Plain SQL in `supabase/migrations/0001_init.sql` | Applied through the Supabase SQL editor. |
+> | `schema.prisma` datasource | n/a | Prisma 7 removed `url`/`directUrl` from the schema and dropped `directUrl` entirely — the plan was written against v5/v6 conventions. Moot after the switch. |
+> | Next.js 15 | Next.js 16.3.5 / React 19.2.8 | `create-next-app@latest` resolved newer. `middleware.ts` also became `proxy.ts`. |
+> | Tasks 5/6 inline `<form action>` | Client form components | A form action must return `void`; returning validation errors from one silently discarded them. |
+> | No RLS step | RLS enabled, no policies | Tables are exposed through Supabase's public REST API; without this, the anon key could read and write payroll data. |
+> | — | `lib/num.ts` added | PostgREST returns `numeric` as JSON numbers, which would have reintroduced float error. |
+>
+> `lib/payroll.ts` and `lib/date.ts` were built as planned and survived the
+> database swap unchanged.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a web app that records which worker went to which company each day, and produces month-end worker-wise payroll and company-wise billing reports with overtime.

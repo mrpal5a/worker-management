@@ -106,15 +106,49 @@ company; OT is only touched when it applies.
 
 ## Architecture
 
-Next.js (App Router) with Prisma against Supabase-hosted Postgres, deployed on
-Vercel. All free tier. Supabase is used purely as a database — its auth,
-storage, and auto-generated API are not used.
+Next.js (App Router) against Supabase Postgres, deployed on Vercel. All free
+tier.
+
+The app reaches the database through the Supabase JS client over HTTPS, using
+the `service_role` key server-side. There is no ORM and no Postgres connection
+string: no database password to leak, no connection pooler to configure, and no
+dependency on an IPv6 route to the database host.
+
+Schema changes are plain SQL files under `supabase/migrations/`, applied through
+the Supabase SQL editor.
+
+Supabase is used purely as a database. Its auth and storage products are not
+used, and its auto-generated REST API is deliberately closed off — see Row
+Level Security below.
+
+### Row Level Security
+
+Every table is exposed through Supabase's auto-generated REST API. RLS is
+enabled on all three tables with **no policies**, which denies all access to the
+`anon` and `authenticated` roles. The app connects with the `service_role` key,
+which bypasses RLS by design, so the app works while the public API surface
+stays shut.
+
+The service key is server-only: its environment variable has no `NEXT_PUBLIC_`
+prefix, and `lib/supabase.ts` imports `server-only`, making an import from a
+client component a build error rather than a silent key leak.
 
 The one boundary that matters is `lib/payroll.ts`: every money calculation lives
 there as **pure functions taking plain values and returning plain values, with no
 database access**. That is the code which must be correct, and purity lets it be
-tested exhaustively without a database or fixtures. Prisma queries, server
+tested exhaustively without a database or fixtures. Database queries, server
 actions, and React components are plumbing arranged around it.
+
+All Supabase access is confined to `lib/repo.ts`. That boundary proved itself
+during construction: the database layer was swapped wholesale from Prisma to
+Supabase and `lib/payroll.ts` and `lib/date.ts` needed no changes at all, with
+their tests passing untouched through the rewrite.
+
+One consequence of PostgREST deserves noting. It serializes `numeric` columns as
+unquoted JSON numbers, so money arrives as JS doubles — which would quietly
+reintroduce the float error the Decimal rule exists to prevent. `lib/num.ts` is
+the single boundary where a database value becomes a `Decimal`; nothing
+downstream performs arithmetic on a raw number.
 
 Authentication is a single shared password and a session cookie. There is one
 user; account management would be unused complexity.
