@@ -6,7 +6,10 @@
 
 **Architecture:** Next.js App Router with server actions for all mutations. All money calculation lives in `lib/payroll.ts` as pure functions with no database access, so it can be tested exhaustively without fixtures. Prisma talks to Postgres. Every attendance row snapshots the rates in force at entry time, so historical reports never change.
 
-**Tech Stack:** Next.js 15 (App Router, TypeScript), Prisma, Postgres (Neon), Vitest, Tailwind CSS, decimal.js, deployed on Vercel.
+**Tech Stack:** Next.js 15 (App Router, TypeScript), Prisma, Postgres (Supabase), Vitest, Tailwind CSS, decimal.js, deployed on Vercel.
+
+Supabase is used only as a hosted Postgres database. Its auth, storage, and
+auto-generated REST API are not used — all access goes through Prisma.
 
 ---
 
@@ -382,19 +385,38 @@ git commit -m "feat: add payroll calculation with reconciliation invariant"
 **Files:**
 - Create: `prisma/schema.prisma`, `lib/db.ts`, `.env`, `.env.example`
 
-- [ ] **Step 1: Create a free Neon Postgres database**
+- [ ] **Step 1: Create a free Supabase Postgres database**
 
-Sign up at https://neon.tech, create a project, and copy the connection string. It looks like:
-`postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require`
+Sign up at https://supabase.com, create a project, and choose a database password
+(save it — it appears in both connection strings below).
+
+Then go to **Project Settings → Database → Connection string → URI** and copy
+*both* forms:
+
+- **Transaction pooler**, port `6543` — used by the app at runtime. Serverless
+  functions open many short-lived connections, and Postgres will refuse them
+  without a pooler in front.
+- **Direct connection**, port `5432` — used for migrations. Schema changes cannot
+  run through the transaction pooler, because it does not support the prepared
+  statements and session state that DDL requires.
 
 - [ ] **Step 2: Write `.env`**
 
 ```
-DATABASE_URL="postgresql://user:pass@host/neondb?sslmode=require"
+# Pooled — used by the running app. Note the pgbouncer flags.
+DATABASE_URL="postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+
+# Direct — used only by prisma migrate.
+DIRECT_URL="postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres"
+
 APP_PASSWORD="choose-a-password"
 ```
 
-Then write `.env.example` with the same keys and empty values. `.env` is already gitignored; `.env.example` must be committed.
+If the password contains `@`, `:`, `/` or `?`, percent-encode it, or the URL will
+not parse (`@` becomes `%40`, and so on).
+
+Then write `.env.example` with the same three keys and empty values. `.env` is
+already gitignored; `.env.example` must be committed.
 
 - [ ] **Step 3: Write `prisma/schema.prisma`**
 
@@ -404,8 +426,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Migrations must bypass the transaction pooler.
+  directUrl = env("DIRECT_URL")
 }
 
 model Worker {

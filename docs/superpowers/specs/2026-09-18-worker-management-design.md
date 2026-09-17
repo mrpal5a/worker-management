@@ -106,8 +106,9 @@ company; OT is only touched when it applies.
 
 ## Architecture
 
-Next.js (App Router) with Prisma against Postgres, deployed on Vercel with Neon.
-All free tier.
+Next.js (App Router) with Prisma against Supabase-hosted Postgres, deployed on
+Vercel. All free tier. Supabase is used purely as a database — its auth,
+storage, and auto-generated API are not used.
 
 The one boundary that matters is `lib/payroll.ts`: every money calculation lives
 there as **pure functions taking plain values and returning plain values, with no
