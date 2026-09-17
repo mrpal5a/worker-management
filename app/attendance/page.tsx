@@ -22,7 +22,7 @@ export default async function AttendancePage({
   const byWorker = new Map(entries.map((e) => [e.worker_id, e]));
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="mx-auto max-w-3xl p-4 sm:p-6">
       <h1 className="mb-4 text-2xl font-semibold">Daily Attendance</h1>
 
       <form className="mb-6 flex flex-wrap items-center gap-3">
@@ -57,15 +57,14 @@ export default async function AttendancePage({
           page first.
         </p>
       ) : (
-        <table className="w-full text-left text-sm">
-          <thead className="border-b">
-            <tr>
-              <th className="py-2">Worker</th>
-              <th>Company</th>
-              <th>OT hrs</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Column headings only make sense once the row is a grid. */}
+          <div className="hidden border-b pb-2 text-sm font-medium text-gray-500 sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:gap-3">
+            <div>Worker</div>
+            <div>Company</div>
+            <div>OT hrs</div>
+          </div>
+          <ul>
             {workers.map((w) => {
               const e = byWorker.get(w.id);
               return (
@@ -80,8 +79,8 @@ export default async function AttendancePage({
                 />
               );
             })}
-          </tbody>
-        </table>
+          </ul>
+        </>
       )}
     </main>
   );

@@ -25,7 +25,7 @@ export default async function WorkerReportPage({
   const detail = rows.filter((r) => r.workerId === workerId);
 
   return (
-    <main className="mx-auto max-w-4xl p-6">
+    <main className="mx-auto max-w-4xl p-4 sm:p-6">
       <h1 className="mb-1 text-2xl font-semibold">Worker Report</h1>
       <p className="mb-6 text-sm text-gray-500">{monthLabel(year, month)}</p>
 
@@ -44,7 +44,8 @@ export default async function WorkerReportPage({
           No attendance recorded for {monthLabel(year, month)}.
         </p>
       ) : (
-        <table className="w-full text-left text-sm">
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <table className="w-full min-w-[32rem] text-left text-sm">
           <thead className="border-b">
             <tr>
               <th className="py-2">Date</th>
@@ -79,6 +80,7 @@ export default async function WorkerReportPage({
             </tr>
           </tfoot>
         </table>
+        </div>
       )}
     </main>
   );

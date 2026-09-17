@@ -1,11 +1,15 @@
 /**
  * Signed session tokens.
  *
- * The session cookie previously held the constant string 'ok', which meant
- * anyone could forge a session by setting that cookie by hand — a complete
- * authentication bypass. The cookie now holds an HMAC-signed, expiring token
- * that only the server can produce and that the proxy verifies on every
- * request.
+ * The cookie holds an HMAC-signed, expiring token that only the server can
+ * produce. It previously held the constant string 'ok', which meant anyone
+ * could forge a session by setting that cookie by hand — a complete
+ * authentication bypass.
+ *
+ * The signed payload carries the user's identity and role, so the proxy can
+ * authorise a request without a database read, and a user cannot promote
+ * themselves to admin by editing the cookie — altering the role invalidates
+ * the signature.
  *
  * Uses Web Crypto rather than node:crypto because proxy.ts runs on the Edge
  * runtime, where node:crypto is unavailable.
@@ -13,7 +17,25 @@
 
 const encoder = new TextEncoder();
 
-export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+/**
+ * Seven days. A signed token is verified offline, so it stays valid until it
+ * expires: deactivating an account does not terminate a session already in
+ * flight. Seven days bounds that exposure. Rotating SESSION_SECRET invalidates
+ * every outstanding session immediately.
+ */
+export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export type Role = 'admin' | 'user';
+
+export interface Session {
+  userId: string;
+  role: Role;
+  expiresAt: number;
+}
+
+function isRole(value: string): value is Role {
+  return value === 'admin' || value === 'user';
+}
 
 function toBase64Url(bytes: ArrayBuffer): string {
   const binary = String.fromCharCode(...new Uint8Array(bytes));
@@ -42,15 +64,16 @@ async function hmacKey(secret: string): Promise<CryptoKey> {
 
 /**
  * Issue a token of the form `<payload>.<signature>`, where payload is
- * `<expiryMs>:<nonce>`. The nonce makes each token unique even when two are
- * issued in the same millisecond.
+ * `<expiryMs>:<role>:<userId>:<nonce>`. The nonce makes each token unique even
+ * when two are issued within the same millisecond.
  */
 export async function createSessionToken(
   secret: string,
+  identity: { userId: string; role: Role },
   ttlMs: number = SESSION_TTL_MS,
 ): Promise<string> {
   const nonce = toBase64Url(crypto.getRandomValues(new Uint8Array(16)).buffer);
-  const payload = `${Date.now() + ttlMs}:${nonce}`;
+  const payload = `${Date.now() + ttlMs}:${identity.role}:${identity.userId}:${nonce}`;
   const signature = await crypto.subtle.sign('HMAC', await hmacKey(secret), encoder.encode(payload));
   return `${payload}.${toBase64Url(signature)}`;
 }
@@ -85,11 +108,28 @@ export async function verifySessionToken(secret: string, token: string): Promise
 }
 
 /**
- * The key used to sign sessions. A dedicated SESSION_SECRET is preferred;
- * falling back to APP_PASSWORD keeps existing deployments working without new
- * configuration, and has the useful property that changing the app password
- * invalidates every outstanding session.
+ * Verify and decode a token into a Session. Returns null for anything that
+ * fails verification, has expired, or carries a role this app does not define.
+ */
+export async function readSessionToken(secret: string, token: string): Promise<Session | null> {
+  if (!(await verifySessionToken(secret, token))) return null;
+
+  const payload = token.split('.')[0];
+  const [expiryRaw, role, userId] = payload.split(':');
+
+  if (!role || !isRole(role)) return null;
+  if (!userId) return null;
+
+  return { userId, role, expiresAt: Number(expiryRaw) };
+}
+
+/**
+ * The key used to sign sessions.
+ *
+ * Required — there is no fallback. Passwords now live in Supabase Auth, so
+ * there is no shared app password to derive a key from, and silently signing
+ * with an empty secret would accept forged cookies.
  */
 export function sessionSecret(): string {
-  return process.env.SESSION_SECRET || process.env.APP_PASSWORD || '';
+  return process.env.SESSION_SECRET || '';
 }

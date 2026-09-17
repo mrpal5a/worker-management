@@ -66,25 +66,68 @@ Fill in `.env`:
 |---|---|
 | `SUPABASE_URL` | Supabase → Project Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys → `service_role` → Reveal |
-| `APP_PASSWORD` | Any password you choose; it gates the app |
-| `SESSION_SECRET` | Optional. Signs session cookies. Falls back to `APP_PASSWORD`. Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
+| `SESSION_SECRET` | Required. Signs session cookies. Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
 
-Apply the schema: open `supabase/migrations/0001_init.sql`, paste it into the
-Supabase **SQL Editor**, and run it.
+Apply the schema. Open each file in `supabase/migrations/` in order, paste it
+into the Supabase **SQL Editor**, and run it:
+
+1. `0001_init.sql` — workers, companies, attendance
+2. `0002_profiles.sql` — accounts
+
+Then **turn off self-signup**: Supabase → Authentication → Sign In / Providers →
+Email → disable "Allow new users to sign up". Without this, anyone can register
+against the Supabase API directly, no matter what the app's screens allow.
+
+Create the first admin account — only an admin can create accounts through the
+app, so this breaks the chicken-and-egg:
+
+```bash
+node scripts/create-admin.mjs you@example.com "a-strong-password" "Your Name"
+```
 
 ```bash
 npm run dev
 ```
 
+## Accounts
+
+Everyone has their own account. There are two roles:
+
+- **admin** — everything, plus managing accounts.
+- **user** — everything operational: attendance, registers, and all reports
+  including bill rates and margin.
+
+Accounts are created only by an admin, from the **Users** screen. Self-signup is
+disabled, so there is no public registration path.
+
+There are no password-reset emails. If someone forgets their password, an admin
+sets a new one from the Users screen — recovery does not depend on them having a
+mailbox they actually read.
+
+An admin cannot deactivate or demote their own account, and the last active
+admin cannot be removed. Both would otherwise lock everyone out permanently.
+
 ### Sessions
 
-Login sets an HTTP-only cookie holding an HMAC-signed token that carries its own
-expiry. `proxy.ts` verifies the signature and expiry on every request.
+Supabase Auth verifies passwords; the app issues its own HMAC-signed cookie as
+the session. The signed payload carries the user id and role, so `proxy.ts` can
+authorise a request with no database read, and a user cannot promote themselves
+to admin by editing the cookie — altering the role invalidates the signature.
 
 The token is deliberately not a constant. An earlier version stored the literal
 string `ok`, which meant anyone could forge a session by setting that cookie by
 hand — a complete authentication bypass, since the value was public in the
-source. Signing makes the cookie unforgeable without the server secret.
+source.
+
+**Sessions last 7 days.** Because they are verified offline, a signed cookie
+stays valid until it expires: deactivating an account does not kill a session
+already in flight. Seven days bounds that. Changing `SESSION_SECRET` invalidates
+every outstanding session immediately, and is the "sign everyone out now"
+control.
+
+The proxy guards page navigation. The authoritative permission check lives
+inside each admin server action, because a server action can be invoked directly
+over HTTP without passing through the proxy.
 
 ### Why the service_role key
 
@@ -112,6 +155,8 @@ tested exhaustively without fixtures. Everything else is arranged around it.
 | `lib/num.ts` | Database value → `Decimal` boundary. |
 | `lib/repo.ts` | Every Supabase query. |
 | `lib/session.ts` | HMAC-signed session tokens. |
+| `lib/auth.ts` | Authorisation predicates. Pure. |
+| `lib/users.ts` | Accounts, over Supabase Auth. |
 | `app/actions/` | Server actions. |
 
 That boundary was tested in practice: the database layer was replaced wholesale
@@ -128,11 +173,11 @@ day west of UTC and misfile attendance.
 npm test
 ```
 
-57 tests covering the payroll math, aggregation, date handling, numeric
-conversion, and session signing.
+74 tests covering the payroll math, aggregation, date handling, numeric
+conversion, session signing, and authorisation.
 
 Two are worth knowing about. A reconciliation invariant asserts that total pay
 plus total margin equals total billing — if the worker-wise and company-wise
 reports ever disagree, it fails. And the session suite asserts that the old
-forgeable cookie value `ok` is rejected, so that bypass cannot silently
-return.
+forgeable cookie value `ok` is rejected, and that a token whose role has been
+edited fails verification — so neither bypass can silently return.

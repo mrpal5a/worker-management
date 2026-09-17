@@ -18,23 +18,30 @@ export function LoginForm() {
 
   return (
     <form action={onSubmit} className="flex flex-col gap-3">
-      <div className="flex gap-2">
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          required
-          autoFocus
-          className="flex-1 rounded border px-3 py-2"
-        />
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-        >
-          {pending ? '…' : 'Enter'}
-        </button>
-      </div>
+      <input
+        name="email"
+        type="email"
+        placeholder="Email"
+        required
+        autoFocus
+        autoComplete="username"
+        className="min-h-11 w-full rounded border px-3 py-2"
+      />
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        required
+        autoComplete="current-password"
+        className="min-h-11 w-full rounded border px-3 py-2"
+      />
+      <button
+        type="submit"
+        disabled={pending}
+        className="min-h-11 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+      >
+        {pending ? 'Signing in…' : 'Sign in'}
+      </button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </form>
   );

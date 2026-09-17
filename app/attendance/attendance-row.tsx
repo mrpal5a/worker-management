@@ -12,6 +12,13 @@ interface Props {
   initialOt: string;
 }
 
+/**
+ * One worker's entry for one day.
+ *
+ * Renders as a two-line block on a phone — name above, controls below — and as
+ * a grid row from the `sm` breakpoint up. One component serves both, so the
+ * two layouts cannot drift apart.
+ */
 export function AttendanceRow({
   dateKey,
   workerId,
@@ -58,16 +65,22 @@ export function AttendanceRow({
   }
 
   return (
-    <tr className={`border-b ${pending ? 'opacity-50' : ''}`}>
-      <td className="py-2">
+    <li
+      className={`border-b py-3 sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:items-center sm:gap-3 sm:py-2 ${
+        pending ? 'opacity-50' : ''
+      }`}
+    >
+      <div className="mb-2 font-medium sm:mb-0">
         {workerName}
-        {error && <div className="text-xs text-red-600">{error}</div>}
-      </td>
-      <td>
+        {error && <div className="text-xs font-normal text-red-600">{error}</div>}
+      </div>
+
+      <div className="flex gap-2 sm:contents">
         <select
           value={companyId}
           onChange={(e) => onCompanyChange(e.target.value)}
-          className="w-full rounded border px-2 py-1"
+          aria-label={`Company for ${workerName}`}
+          className="min-h-11 flex-1 rounded border px-2 py-1"
         >
           <option value="">— Absent —</option>
           {companies.map((c) => (
@@ -76,8 +89,7 @@ export function AttendanceRow({
             </option>
           ))}
         </select>
-      </td>
-      <td className="w-24">
+
         <input
           type="number"
           step="0.5"
@@ -87,9 +99,10 @@ export function AttendanceRow({
           disabled={!companyId}
           onChange={(e) => setOt(e.target.value)}
           onBlur={(e) => onOtCommit(e.target.value)}
-          className="w-full rounded border px-2 py-1 disabled:bg-gray-100"
+          aria-label={`Overtime hours for ${workerName}`}
+          className="min-h-11 w-20 rounded border px-2 py-1 disabled:bg-gray-100 sm:w-full"
         />
-      </td>
-    </tr>
+      </div>
+    </li>
   );
 }
