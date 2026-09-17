@@ -67,6 +67,7 @@ Fill in `.env`:
 | `SUPABASE_URL` | Supabase → Project Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys → `service_role` → Reveal |
 | `APP_PASSWORD` | Any password you choose; it gates the app |
+| `SESSION_SECRET` | Optional. Signs session cookies. Falls back to `APP_PASSWORD`. Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
 
 Apply the schema: open `supabase/migrations/0001_init.sql`, paste it into the
 Supabase **SQL Editor**, and run it.
@@ -74,6 +75,16 @@ Supabase **SQL Editor**, and run it.
 ```bash
 npm run dev
 ```
+
+### Sessions
+
+Login sets an HTTP-only cookie holding an HMAC-signed token that carries its own
+expiry. `proxy.ts` verifies the signature and expiry on every request.
+
+The token is deliberately not a constant. An earlier version stored the literal
+string `ok`, which meant anyone could forge a session by setting that cookie by
+hand — a complete authentication bypass, since the value was public in the
+source. Signing makes the cookie unforgeable without the server secret.
 
 ### Why the service_role key
 
@@ -100,6 +111,7 @@ tested exhaustively without fixtures. Everything else is arranged around it.
 | `lib/date.ts` | UTC-safe calendar dates. |
 | `lib/num.ts` | Database value → `Decimal` boundary. |
 | `lib/repo.ts` | Every Supabase query. |
+| `lib/session.ts` | HMAC-signed session tokens. |
 | `app/actions/` | Server actions. |
 
 That boundary was tested in practice: the database layer was replaced wholesale
@@ -116,7 +128,11 @@ day west of UTC and misfile attendance.
 npm test
 ```
 
-45 tests covering the payroll math, aggregation, date handling, and numeric
-conversion — including a reconciliation invariant asserting that total pay plus
-total margin equals total billing. If the worker-wise and company-wise reports
-ever disagree, that test fails.
+57 tests covering the payroll math, aggregation, date handling, numeric
+conversion, and session signing.
+
+Two are worth knowing about. A reconciliation invariant asserts that total pay
+plus total margin equals total billing — if the worker-wise and company-wise
+reports ever disagree, it fails. And the session suite asserts that the old
+forgeable cookie value `ok` is rejected, so that bypass cannot silently
+return.

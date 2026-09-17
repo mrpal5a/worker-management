@@ -2,10 +2,10 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { createSessionToken, sessionSecret, SESSION_TTL_MS } from '@/lib/session';
 
 // NOTE: a 'use server' module may only export async functions, so the cookie
-// name is a local constant rather than an export. middleware.ts carries its
-// own copy of this string.
+// name is a local constant rather than an export. proxy.ts carries its own copy.
 const SESSION_COOKIE = 'wm_session';
 
 export async function login(formData: FormData): Promise<{ error: string } | undefined> {
@@ -19,12 +19,21 @@ export async function login(formData: FormData): Promise<{ error: string } | und
     return { error: 'Wrong password.' };
   }
 
+  const secret = sessionSecret();
+  if (!secret) {
+    return { error: 'No session secret configured on the server.' };
+  }
+
+  // A signed, expiring token — not a constant. A constant cookie value would
+  // let anyone forge a session by setting the cookie by hand.
+  const token = await createSessionToken(secret);
+
   const jar = await cookies();
-  jar.set(SESSION_COOKIE, 'ok', {
+  jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: SESSION_TTL_MS / 1000,
     path: '/',
   });
 
