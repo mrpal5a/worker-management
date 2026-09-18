@@ -2,6 +2,10 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { addUser } from '@/app/actions/users';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { PlusIcon } from '@/components/ui/icons';
 
 export function UserForm() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -24,42 +28,35 @@ export function UserForm() {
   }
 
   return (
-    <div className="mb-8 rounded-lg border border-border-base bg-surface-raised p-4">
+    <div className="mb-8 rounded-xl border border-border-base bg-surface-raised p-4 shadow-sm">
       <h2 className="mb-3 font-medium">Add an account</h2>
       <form ref={formRef} action={onSubmit} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        <input
+        <Input
           name="email"
           type="email"
           placeholder="Email"
           required
           autoComplete="off"
-          className="flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8 sm:min-w-48"
+          className="flex-1 sm:min-w-48"
         />
-        <input
-          name="name"
-          placeholder="Name"
-          className="flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8 sm:min-w-32"
-        />
-        <input
+        <Input name="name" placeholder="Name" className="flex-1 sm:min-w-32" />
+        <Input
           name="password"
           type="password"
           placeholder="Password (min 8)"
           required
           minLength={8}
           autoComplete="new-password"
-          className="flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8 sm:min-w-40"
+          className="flex-1 sm:min-w-40"
         />
-        <select name="role" defaultValue="user" className="min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8">
+        <Select name="role" defaultValue="user" className="sm:w-auto">
           <option value="user">User</option>
           <option value="admin">Admin</option>
-        </select>
-        <button
-          type="submit"
-          disabled={pending}
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover disabled:opacity-50 sm:min-h-9"
-        >
-          {pending ? '…' : 'Create'}
-        </button>
+        </Select>
+        <Button type="submit" loading={pending}>
+          {!pending && <PlusIcon width={16} height={16} />}
+          {pending ? 'Creating…' : 'Create'}
+        </Button>
       </form>
 
       {error && <p className="mt-2 text-sm text-danger">{error}</p>}

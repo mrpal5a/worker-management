@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 import './globals.css';
 import { Nav } from './nav';
 import { resolveTheme, THEME_COOKIE } from '@/lib/theme';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Worker Management',
@@ -23,7 +30,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const theme = resolveTheme(jar.get(THEME_COOKIE)?.value);
 
   return (
-    <html lang="en" className={theme === 'dark' ? 'dark' : undefined}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${theme === 'dark' ? 'dark' : ''}`}
+      // A browser extension (e.g. a device emulator) can inject attributes
+      // onto <html> after the server response but before React hydrates.
+      // That's an artifact of the browser, not a real mismatch, so it's
+      // suppressed here rather than for the whole tree.
+      suppressHydrationWarning
+    >
       <body className="min-h-screen bg-surface text-text-base antialiased">
         <Nav theme={theme} />
         {children}

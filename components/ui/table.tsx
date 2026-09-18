@@ -24,3 +24,20 @@ export function Td({ children, right = false }: { children?: React.ReactNode; ri
     </td>
   );
 }
+
+/** A body row with a subtle hover highlight, so scanning a dense table has a visual anchor. */
+export function Tr({
+  children,
+  dim = false,
+  className = '',
+}: {
+  children: React.ReactNode;
+  dim?: boolean;
+  className?: string;
+}) {
+  return (
+    <tr className={`transition-colors hover:bg-surface-sunken/60 ${dim ? 'opacity-40' : ''} ${className}`}>
+      {children}
+    </tr>
+  );
+}

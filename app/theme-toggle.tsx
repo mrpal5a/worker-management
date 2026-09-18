@@ -15,7 +15,7 @@ export function ThemeToggle({ theme }: { theme: Theme }) {
       disabled={pending}
       aria-label={`Switch to ${next} theme`}
       title={`Switch to ${next} theme`}
-      className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-md border border-border-base text-text-muted transition-colors hover:text-text-base disabled:opacity-50"
+      className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-md border border-border-base text-text-muted transition-colors hover:border-border-strong hover:bg-surface-sunken hover:text-text-base disabled:opacity-50"
     >
       {theme === 'dark' ? (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">

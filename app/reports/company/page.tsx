@@ -3,6 +3,12 @@ import { aggregate } from '@/lib/reports';
 import { calcEntry } from '@/lib/payroll';
 import { money, hours, currentMonth, monthLabel } from '@/lib/format';
 import { MonthPicker } from '../month-picker';
+import { PageHeader } from '@/components/ui/page-header';
+import { HeroStat } from '@/components/ui/hero-stat';
+import { Select } from '@/components/ui/select';
+import { TableWrap, Th, Td, Tr } from '@/components/ui/table';
+import { EmptyState } from '@/components/ui/empty-state';
+import { BarChartIcon } from '@/components/ui/icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,32 +32,33 @@ export default async function CompanyReportPage({
 
   return (
     <main className="mx-auto max-w-5xl p-4 sm:p-6">
-      <h1 className="mb-1 text-2xl font-semibold">Company Report</h1>
-      <p className="mb-6 text-sm text-text-muted">{monthLabel(year, month)}</p>
+      <PageHeader
+        title="Company Report"
+        eyebrow={monthLabel(year, month)}
+        icon={<BarChartIcon />}
+        action={bucket ? <HeroStat value={money(bucket.bill)} label="billed" /> : undefined}
+      />
 
       <MonthPicker year={year} month={month}>
-        <select name="companyId" defaultValue={companyId} className="min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8">
+        <Select name="companyId" defaultValue={companyId} className="sm:w-auto">
           {[...agg.byCompany.values()].map((b) => (
             <option key={b.id} value={b.id}>
               {b.name}
             </option>
           ))}
-        </select>
+        </Select>
       </MonthPicker>
 
       {!bucket ? (
-        <p className="py-8 text-center text-text-muted">
-          No attendance recorded for {monthLabel(year, month)}.
-        </p>
+        <EmptyState title="No attendance recorded" description={`Nothing logged for ${monthLabel(year, month)}.`} />
       ) : (
-        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <table className="tabular w-full min-w-[32rem] text-left text-sm">
-          <thead className="border-b border-border-base">
+        <TableWrap>
+          <thead>
             <tr>
-              <th className="py-2">Date</th>
-              <th>Worker</th>
-              <th className="text-right">OT hrs</th>
-              <th className="text-right">Billed</th>
+              <Th>Date</Th>
+              <Th>Worker</Th>
+              <Th right>OT hrs</Th>
+              <Th right>Billed</Th>
             </tr>
           </thead>
           <tbody>
@@ -62,25 +69,24 @@ export default async function CompanyReportPage({
                 otHours: r.otHours,
               });
               return (
-                <tr key={`${r.dateKey}-${r.workerId}`} className="border-b border-border-base">
-                  <td className="py-2">{r.dateKey}</td>
-                  <td>{r.workerName}</td>
-                  <td className="text-right">{hours(r.otHours)}</td>
-                  <td className="text-right">{money(bill)}</td>
-                </tr>
+                <Tr key={`${r.dateKey}-${r.workerId}`}>
+                  <Td>{r.dateKey}</Td>
+                  <Td>{r.workerName}</Td>
+                  <Td right>{hours(r.otHours)}</Td>
+                  <Td right>{money(bill)}</Td>
+                </Tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr className="font-semibold">
-              <td className="py-3">{bucket.days} man-days</td>
-              <td />
-              <td className="text-right">{hours(bucket.otHours)}</td>
-              <td className="text-right">{money(bucket.bill)}</td>
+              <Td>{bucket.days} man-days</Td>
+              <Td />
+              <Td right>{hours(bucket.otHours)}</Td>
+              <Td right>{money(bucket.bill)}</Td>
             </tr>
           </tfoot>
-        </table>
-        </div>
+        </TableWrap>
       )}
     </main>
   );

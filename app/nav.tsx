@@ -4,7 +4,24 @@ import { getProfile } from '@/lib/users';
 import { logout } from '@/app/actions/auth';
 import { ThemeToggle } from './theme-toggle';
 import { NavDrawer } from './nav-drawer';
+import { NavLinks, type NavLink } from './nav-links';
+import {
+  CalendarIcon,
+  UsersIcon,
+  BriefcaseIcon,
+  FileTextIcon,
+  BarChartIcon,
+  PieChartIcon,
+  ShieldIcon,
+  LogOutIcon,
+} from '@/components/ui/icons';
 import type { Theme } from '@/lib/theme';
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  return parts.slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
+}
 
 /**
  * Signed-in navigation. Renders nothing when there is no session, so the login
@@ -17,38 +34,50 @@ export async function Nav({ theme }: { theme: Theme }) {
   const profile = await getProfile(session.userId);
   const name = profile?.name || profile?.email || 'Signed in';
 
-  const links: [string, string][] = [
-    ['/attendance', 'Attendance'],
-    ['/workers', 'Workers'],
-    ['/companies', 'Companies'],
-    ['/reports/worker', 'Worker'],
-    ['/reports/company', 'Company'],
-    ['/reports/summary', 'Summary'],
+  const links: NavLink[] = [
+    { href: '/attendance', label: 'Attendance', icon: <CalendarIcon width={16} height={16} /> },
+    { href: '/workers', label: 'Workers', icon: <UsersIcon width={16} height={16} /> },
+    { href: '/companies', label: 'Companies', icon: <BriefcaseIcon width={16} height={16} /> },
+    { href: '/reports/worker', label: 'Worker', icon: <FileTextIcon width={16} height={16} /> },
+    { href: '/reports/company', label: 'Company', icon: <BarChartIcon width={16} height={16} /> },
+    { href: '/reports/summary', label: 'Summary', icon: <PieChartIcon width={16} height={16} /> },
   ];
-  if (session.role === 'admin') links.push(['/users', 'Users']);
+  if (session.role === 'admin') {
+    links.push({ href: '/users', label: 'Users', icon: <ShieldIcon width={16} height={16} /> });
+  }
 
   return (
-    <header className="border-b border-border-base bg-surface-raised">
-      <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2">
+    <header className="sticky top-0 z-30 border-b border-border-base bg-surface-raised/85 backdrop-blur supports-[backdrop-filter]:bg-surface-raised/70">
+      <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2.5">
         <NavDrawer links={links} userName={name} theme={theme} logout={logout} />
 
-        <span className="font-semibold tracking-tight sm:hidden">Worker Mgmt</span>
+        <Link href="/" className="flex items-center gap-2">
+          <span className="brand-gradient flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold text-accent-fg shadow-sm">
+            W
+          </span>
+          <span className="font-semibold tracking-tight sm:hidden lg:inline">Worker Mgmt</span>
+        </Link>
 
-        <nav className="hidden items-center gap-4 text-sm sm:flex">
-          {links.map(([href, label]) => (
-            <Link key={href} href={href} className="text-text-muted transition-colors hover:text-text-base">
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <NavLinks links={links} />
 
-        <div className="ml-auto flex items-center gap-2">
-          <span className="hidden max-w-40 truncate text-sm text-text-muted sm:inline">{name}</span>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="hidden items-center gap-2 sm:flex">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-sunken text-xs font-semibold text-text-base">
+              {initials(name)}
+            </span>
+            <span className="max-w-32 truncate text-sm text-text-muted">{name}</span>
+          </span>
           <span className="hidden sm:inline">
             <ThemeToggle theme={theme} />
           </span>
           <form action={logout} className="hidden sm:block">
-            <button className="text-sm text-text-muted hover:underline">Log out</button>
+            <button
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 text-sm text-text-muted transition-colors hover:bg-surface-sunken hover:text-text-base"
+              aria-label="Log out"
+              title="Log out"
+            >
+              <LogOutIcon width={16} height={16} />
+            </button>
           </form>
         </div>
       </div>

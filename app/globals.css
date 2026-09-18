@@ -8,32 +8,44 @@
 
 :root {
   --surface: #ffffff;
-  --surface-raised: #fafafa;
-  --surface-sunken: #f4f4f5;
-  --border: #e4e4e7;
-  --border-strong: #d4d4d8;
-  --text: #18181b;
-  --text-muted: #71717a;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
+  --surface-raised: #f9fafb;
+  --surface-sunken: #f3f4f6;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
   --accent-fg: #ffffff;
+  --accent-soft: #eef2ff;
+  --accent-soft-text: #4338ca;
   --danger: #dc2626;
-  --success: #15803d;
+  --danger-soft: #fef2f2;
+  --success: #16a34a;
+  --success-soft: #f0fdf4;
+  --warning: #d97706;
+  --warning-soft: #fffbeb;
 }
 
 .dark {
-  --surface: #18181b;
-  --surface-raised: #27272a;
-  --surface-sunken: #111113;
-  --border: #3f3f46;
-  --border-strong: #52525b;
-  --text: #fafafa;
-  --text-muted: #a1a1aa;
-  --accent: #60a5fa;
-  --accent-hover: #93c5fd;
-  --accent-fg: #0b1220;
+  --surface: #0c0e14;
+  --surface-raised: #151824;
+  --surface-sunken: #10121b;
+  --border: #262a38;
+  --border-strong: #363b4d;
+  --text: #f3f4f6;
+  --text-muted: #9aa1b1;
+  --accent: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-fg: #0c0e14;
+  --accent-soft: rgba(129, 140, 248, 0.16);
+  --accent-soft-text: #c7d2fe;
   --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
   --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.14);
 }
 
 @theme inline {
@@ -47,8 +59,15 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-text: var(--accent-soft-text);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Tells the browser which theme to use for form controls, scrollbars and
@@ -61,12 +80,50 @@ html.dark {
 }
 
 body {
-  background: var(--surface);
+  background:
+    radial-gradient(1100px 620px at -5% -15%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%),
+    radial-gradient(900px 560px at 108% -5%, color-mix(in srgb, #ec4899 10%, transparent), transparent 55%),
+    radial-gradient(1000px 700px at 50% 115%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
+    var(--surface);
+  background-attachment: fixed;
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* Money and hour columns only line up with tabular figures. */
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Nav brand mark and other accent gradients — a linear-gradient of the theme's
+   own tokens so it stays correct in both themes without a second palette. */
+.brand-gradient {
+  background-image: linear-gradient(135deg, var(--accent), var(--accent-hover));
+}
+
+/* Soft radial glow behind the login card. Kept to CSS custom properties so it
+   never needs a dark-mode-specific override. */
+.auth-backdrop {
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),
+    radial-gradient(50rem 35rem at 110% 10%, color-mix(in srgb, #ec4899 16%, transparent), transparent),
+    radial-gradient(55rem 40rem at 50% 120%, color-mix(in srgb, var(--accent) 14%, transparent), transparent),
+    var(--surface);
+}
+
+/* Faint dot grid used behind the dashboard hero. Cheap texture, never a
+   layout dependency. */
+.dot-grid {
+  background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+  mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

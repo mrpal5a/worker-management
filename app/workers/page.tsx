@@ -1,54 +1,54 @@
 import { listWorkers } from '@/lib/repo';
-import { toggleWorker } from '@/app/actions/registers';
 import { WorkerForm } from './worker-form';
-import { toDecimal } from '@/lib/num';
-import { money } from '@/lib/format';
+import { WorkerRow } from './worker-row';
+import { PageHeader } from '@/components/ui/page-header';
+import { HeroStat } from '@/components/ui/hero-stat';
+import { TableWrap, Th } from '@/components/ui/table';
+import { EmptyState } from '@/components/ui/empty-state';
+import { UsersIcon } from '@/components/ui/icons';
 
 export const dynamic = 'force-dynamic';
 
 export default async function WorkersPage() {
   const workers = await listWorkers(true);
+  const activeCount = workers.filter((w) => w.active).length;
 
   return (
     <main className="mx-auto max-w-5xl p-4 sm:p-6">
-      <h1 className="mb-1 text-2xl font-semibold">Workers</h1>
-      <p className="mb-6 text-sm text-text-muted">
-        The day rate is what this worker is paid for one full day.
-      </p>
+      <PageHeader
+        title="Workers"
+        subtitle="The day rate is what this worker is paid for one full day."
+        icon={<UsersIcon />}
+        action={<HeroStat value={String(activeCount)} label="active" />}
+      />
 
       <WorkerForm />
 
       {workers.length === 0 ? (
-        <p className="py-8 text-center text-text-muted">No workers yet. Add one above.</p>
+        <EmptyState title="No workers yet" description="Add one above to get started." />
       ) : (
-        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <table className="tabular w-full min-w-[32rem] text-left text-sm">
-          <thead className="border-b border-border-base">
+        <TableWrap>
+          <thead>
             <tr>
-              <th className="py-2">Name</th>
-              <th>Phone</th>
-              <th className="text-right">Day rate</th>
-              <th className="text-right">Status</th>
+              <Th>Name</Th>
+              <Th>Phone</Th>
+              <Th right>Day rate</Th>
+              <Th right>Status</Th>
             </tr>
           </thead>
           <tbody>
             {workers.map((w) => (
-              <tr key={w.id} className={`border-b border-border-base ${w.active ? '' : 'opacity-40'}`}>
-                <td className="py-2">{w.name}</td>
-                <td>{w.phone ?? '—'}</td>
-                <td className="text-right">{money(toDecimal(w.pay_rate))}</td>
-                <td className="text-right">
-                  <form action={toggleWorker.bind(null, w.id, !w.active)}>
-                    <button className="text-accent hover:underline">
-                      {w.active ? 'Deactivate' : 'Reactivate'}
-                    </button>
-                  </form>
-                </td>
-              </tr>
+              <WorkerRow
+                key={w.id}
+                id={w.id}
+                name={w.name}
+                phone={w.phone}
+                payRate={w.pay_rate}
+                active={w.active}
+              />
             ))}
           </tbody>
-        </table>
-        </div>
+        </TableWrap>
       )}
     </main>
   );

@@ -2,6 +2,12 @@ import { loadMonth } from '@/lib/repo';
 import { aggregate } from '@/lib/reports';
 import { money, currentMonth, monthLabel } from '@/lib/format';
 import { MonthPicker } from '../month-picker';
+import { PageHeader } from '@/components/ui/page-header';
+import { HeroStat } from '@/components/ui/hero-stat';
+import { StatCard } from '@/components/ui/stat-card';
+import { TableWrap, Th, Td, Tr } from '@/components/ui/table';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PieChartIcon, CreditCardIcon, BarChartIcon, TrendingUpIcon } from '@/components/ui/icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,75 +25,66 @@ export default async function SummaryPage({
 
   return (
     <main className="mx-auto max-w-5xl p-4 sm:p-6">
-      <h1 className="mb-1 text-2xl font-semibold">Monthly Summary</h1>
-      <p className="mb-6 text-sm text-text-muted">{monthLabel(year, month)}</p>
+      <PageHeader
+        title="Monthly Summary"
+        eyebrow={monthLabel(year, month)}
+        icon={<PieChartIcon />}
+        action={<HeroStat value={money(agg.totals.margin)} label="margin" />}
+      />
 
       <MonthPicker year={year} month={month} />
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-border-base bg-surface-raised p-4">
-          <div className="text-sm text-text-muted">To pay workers</div>
-          <div className="text-xl font-semibold">{money(agg.totals.pay)}</div>
-        </div>
-        <div className="rounded-lg border border-border-base bg-surface-raised p-4">
-          <div className="text-sm text-text-muted">To collect from companies</div>
-          <div className="text-xl font-semibold">{money(agg.totals.bill)}</div>
-        </div>
-        <div className="rounded-lg border border-border-base bg-surface-raised p-4">
-          <div className="text-sm text-text-muted">Margin</div>
-          <div className="text-xl font-semibold">{money(agg.totals.margin)}</div>
-        </div>
+        <StatCard icon={<CreditCardIcon width={16} height={16} />} label="To pay workers" value={money(agg.totals.pay)} />
+        <StatCard icon={<BarChartIcon width={16} height={16} />} label="To collect from companies" value={money(agg.totals.bill)} />
+        <StatCard icon={<TrendingUpIcon width={16} height={16} />} label="Margin" value={money(agg.totals.margin)} />
       </div>
 
       {agg.totals.days === 0 ? (
-        <p className="py-8 text-center text-text-muted">
-          No attendance recorded for {monthLabel(year, month)}.
-        </p>
+        <EmptyState title="No attendance recorded" description={`Nothing logged for ${monthLabel(year, month)}.`} />
       ) : (
         <>
           <h2 className="mb-2 font-semibold">Workers — to pay</h2>
-          <div className="mb-8 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <table className="tabular w-full min-w-[32rem] text-left text-sm">
-            <thead className="border-b border-border-base">
-              <tr>
-                <th className="py-2">Worker</th>
-                <th className="text-right">Days</th>
-                <th className="text-right">Pay</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...agg.byWorker.values()].map((b) => (
-                <tr key={b.id} className="border-b border-border-base">
-                  <td className="py-2">{b.name}</td>
-                  <td className="text-right">{b.days}</td>
-                  <td className="text-right">{money(b.pay)}</td>
+          <div className="mb-8">
+            <TableWrap>
+              <thead>
+                <tr>
+                  <Th>Worker</Th>
+                  <Th right>Days</Th>
+                  <Th right>Pay</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {[...agg.byWorker.values()].map((b) => (
+                  <Tr key={b.id}>
+                    <Td>{b.name}</Td>
+                    <Td right>{b.days}</Td>
+                    <Td right>{money(b.pay)}</Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </TableWrap>
+          </div>
 
           <h2 className="mb-2 font-semibold">Companies — to collect</h2>
-          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <table className="tabular w-full min-w-[32rem] text-left text-sm">
-            <thead className="border-b border-border-base">
+          <TableWrap>
+            <thead>
               <tr>
-                <th className="py-2">Company</th>
-                <th className="text-right">Man-days</th>
-                <th className="text-right">Billed</th>
+                <Th>Company</Th>
+                <Th right>Man-days</Th>
+                <Th right>Billed</Th>
               </tr>
             </thead>
             <tbody>
               {[...agg.byCompany.values()].map((b) => (
-                <tr key={b.id} className="border-b border-border-base">
-                  <td className="py-2">{b.name}</td>
-                  <td className="text-right">{b.days}</td>
-                  <td className="text-right">{money(b.bill)}</td>
-                </tr>
+                <Tr key={b.id}>
+                  <Td>{b.name}</Td>
+                  <Td right>{b.days}</Td>
+                  <Td right>{money(b.bill)}</Td>
+                </Tr>
               ))}
             </tbody>
-          </table>
-        </div>
+          </TableWrap>
         </>
       )}
     </main>

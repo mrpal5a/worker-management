@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { login } from '@/app/actions/auth';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
@@ -17,32 +19,36 @@ export function LoginForm() {
   }
 
   return (
-    <form action={onSubmit} className="flex flex-col gap-3">
-      <input
-        name="email"
-        type="email"
-        placeholder="Email"
-        required
-        autoFocus
-        autoComplete="username"
-        className="w-full min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
-      />
-      <input
-        name="password"
-        type="password"
-        placeholder="Password"
-        required
-        autoComplete="current-password"
-        className="w-full min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
-      />
-      <button
-        type="submit"
-        disabled={pending}
-        className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover disabled:opacity-50 sm:min-h-9"
-      >
+    <form action={onSubmit} className="flex flex-col gap-4">
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-text-base">Email</span>
+        <Input
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          required
+          autoFocus
+          autoComplete="username"
+        />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-text-base">Password</span>
+        <Input
+          name="password"
+          type="password"
+          placeholder="••••••••"
+          required
+          autoComplete="current-password"
+        />
+      </label>
+      <Button type="submit" loading={pending} className="mt-1 w-full">
         {pending ? 'Signing in…' : 'Sign in'}
-      </button>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      </Button>
+      {error && (
+        <p role="alert" className="rounded-md bg-danger-soft px-3 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

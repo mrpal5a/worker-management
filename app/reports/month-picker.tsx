@@ -1,4 +1,6 @@
 import { MONTH_NAMES } from '@/lib/format';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 /**
  * Shared month/year selector. Plain GET form so report URLs stay shareable
@@ -16,23 +18,23 @@ export function MonthPicker({
   const years = [year - 1, year, year + 1];
 
   return (
-    <form className="mb-6 flex flex-wrap gap-2">
+    <form className="mb-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       {children}
-      <select name="month" defaultValue={month} className="min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8">
+      <Select name="month" defaultValue={month} className="sm:w-auto">
         {MONTH_NAMES.map((label, i) => (
           <option key={label} value={i + 1}>
             {label}
           </option>
         ))}
-      </select>
-      <select name="year" defaultValue={year} className="min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8">
+      </Select>
+      <Select name="year" defaultValue={year} className="sm:w-auto">
         {years.map((y) => (
           <option key={y} value={y}>
             {y}
           </option>
         ))}
-      </select>
-      <button className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover sm:min-h-9">View</button>
+      </Select>
+      <Button type="submit">View</Button>
     </form>
   );
 }

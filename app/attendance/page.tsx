@@ -2,6 +2,12 @@ import Link from 'next/link';
 import { listWorkers, listCompanies, entriesForDate } from '@/lib/repo';
 import { toDateKey } from '@/lib/date';
 import { AttendanceRow } from './attendance-row';
+import { PageHeader } from '@/components/ui/page-header';
+import { HeroStat } from '@/components/ui/hero-stat';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { CalendarIcon } from '@/components/ui/icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,46 +26,67 @@ export default async function AttendancePage({
   ]);
 
   const byWorker = new Map(entries.map((e) => [e.worker_id, e]));
+  const pct = workers.length === 0 ? 0 : Math.round((entries.length / workers.length) * 100);
+  const dateLabel = new Date(`${dateKey}T00:00:00.000Z`).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
 
   return (
     <main className="mx-auto max-w-5xl p-4 sm:p-6">
-      <h1 className="mb-4 text-2xl font-semibold">Daily Attendance</h1>
+      <PageHeader
+        title="Daily Attendance"
+        icon={<CalendarIcon />}
+        eyebrow={dateLabel}
+        action={<HeroStat value={`${entries.length}/${workers.length}`} label="present" />}
+      />
 
-      <form className="mb-6 flex flex-wrap items-center gap-3">
-        <input
-          type="date"
-          name="date"
-          defaultValue={dateKey}
-          className="min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
-        />
-        <button type="submit" className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover sm:min-h-9">
-          Go
-        </button>
-        <span className="text-sm text-text-muted">
-          {entries.length} of {workers.length} present
-        </span>
+      <form className="mb-2 flex flex-wrap items-center gap-2 sm:gap-3">
+        <Input type="date" name="date" defaultValue={dateKey} className="w-auto min-w-0 flex-1 sm:flex-none" />
+        <Button type="submit">Go</Button>
       </form>
 
+      {workers.length > 0 && (
+        <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken">
+          <div
+            className="h-full rounded-full bg-accent transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
+
       {workers.length === 0 ? (
-        <p className="py-8 text-center text-text-muted">
-          No active workers. Add them on the{' '}
-          <Link href="/workers" className="text-accent hover:underline">
-            Workers
-          </Link>{' '}
-          page first.
-        </p>
+        <EmptyState
+          title="No active workers"
+          description={
+            <>
+              Add one on the{' '}
+              <Link href="/workers" className="text-accent hover:underline">
+                Workers
+              </Link>{' '}
+              page first.
+            </>
+          }
+        />
       ) : companies.length === 0 ? (
-        <p className="py-8 text-center text-text-muted">
-          No active companies. Add them on the{' '}
-          <Link href="/companies" className="text-accent hover:underline">
-            Companies
-          </Link>{' '}
-          page first.
-        </p>
+        <EmptyState
+          title="No active companies"
+          description={
+            <>
+              Add one on the{' '}
+              <Link href="/companies" className="text-accent hover:underline">
+                Companies
+              </Link>{' '}
+              page first.
+            </>
+          }
+        />
       ) : (
         <>
           {/* Column headings only make sense once the row is a grid. */}
-          <div className="hidden border-b pb-2 text-sm font-medium text-text-muted sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:gap-3">
+          <div className="hidden border-b border-border-base pb-2 text-sm font-medium text-text-muted sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:gap-3">
             <div>Worker</div>
             <div>Company</div>
             <div>OT hrs</div>

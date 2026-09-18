@@ -2,6 +2,9 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { createWorker } from '@/app/actions/registers';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { PlusIcon } from '@/components/ui/icons';
 
 export function WorkerForm() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -21,31 +24,23 @@ export function WorkerForm() {
   }
 
   return (
-    <div className="mb-8">
-      <form ref={formRef} action={onSubmit} className="flex flex-wrap gap-2">
-        <input
-          name="name"
-          placeholder="Name"
-          required
-          className="min-w-40 flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
-        />
-        <input name="phone" placeholder="Phone (optional)" className="w-40 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8" />
-        <input
+    <div className="mb-8 rounded-xl border border-border-base bg-surface-raised p-3 shadow-sm sm:p-4">
+      <form ref={formRef} action={onSubmit} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Input name="name" placeholder="Name" required className="flex-1 sm:min-w-40" />
+        <Input name="phone" placeholder="Phone (optional)" className="sm:w-40" />
+        <Input
           name="payRate"
           type="number"
           step="0.01"
           min="0"
           placeholder="Day rate"
           required
-          className="w-32 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
+          className="sm:w-32"
         />
-        <button
-          type="submit"
-          disabled={pending}
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover disabled:opacity-50 sm:min-h-9"
-        >
-          {pending ? '…' : 'Add'}
-        </button>
+        <Button type="submit" loading={pending}>
+          {!pending && <PlusIcon width={16} height={16} />}
+          {pending ? 'Adding…' : 'Add'}
+        </Button>
       </form>
       {error && <p className="mt-2 text-sm text-danger">{error}</p>}
     </div>

@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { setAttendance, clearAttendance } from '@/app/actions/attendance';
+import { Select } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 interface Props {
   dateKey: string;
@@ -66,21 +68,27 @@ export function AttendanceRow({
 
   return (
     <li
-      className={`border-b border-border-base py-3 sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:items-center sm:gap-3 sm:py-2 ${
+      className={`border-b border-border-base py-3 transition-opacity sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:items-center sm:gap-3 sm:py-2 ${
         pending ? 'opacity-50' : ''
       }`}
     >
-      <div className="mb-2 font-medium sm:mb-0">
-        {workerName}
-        {error && <div className="text-xs font-normal text-danger">{error}</div>}
+      <div className="mb-2 flex items-center gap-2 font-medium sm:mb-0">
+        <span
+          aria-hidden="true"
+          className={`h-1.5 w-1.5 shrink-0 rounded-full ${companyId ? 'bg-success' : 'bg-border-strong'}`}
+        />
+        <span>
+          {workerName}
+          {error && <div className="text-xs font-normal text-danger">{error}</div>}
+        </span>
       </div>
 
       <div className="flex gap-2 sm:contents">
-        <select
+        <Select
           value={companyId}
           onChange={(e) => onCompanyChange(e.target.value)}
           aria-label={`Company for ${workerName}`}
-          className="flex-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8"
+          className="flex-1"
         >
           <option value="">— Absent —</option>
           {companies.map((c) => (
@@ -88,9 +96,9 @@ export function AttendanceRow({
               {c.name}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <input
+        <Input
           type="number"
           step="0.5"
           min="0"
@@ -100,7 +108,7 @@ export function AttendanceRow({
           onChange={(e) => setOt(e.target.value)}
           onBlur={(e) => onOtCommit(e.target.value)}
           aria-label={`Overtime hours for ${workerName}`}
-          className="w-20 min-h-9 rounded-md border border-border-strong bg-surface px-2 text-sm sm:min-h-8 disabled:bg-surface-sunken sm:w-full"
+          className="w-20 sm:w-full"
         />
       </div>
     </li>
