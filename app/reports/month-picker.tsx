@@ -1,10 +1,14 @@
+'use client';
+
 import { MONTH_NAMES } from '@/lib/format';
 import { Select } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 
 /**
  * Shared month/year selector. Plain GET form so report URLs stay shareable
- * and bookmarkable.
+ * and bookmarkable — changing any field submits it immediately (via the
+ * form's own onChange, which catches every descendant field including the
+ * entity select a page injects as `children`), so there is no separate
+ * "View" step.
  */
 export function MonthPicker({
   year,
@@ -18,7 +22,11 @@ export function MonthPicker({
   const years = [year - 1, year, year + 1];
 
   return (
-    <form className="mb-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+    <form
+      className="mb-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
+      onChange={(e) => e.currentTarget.requestSubmit()}
+    >
+      <input type="hidden" name="mode" value="month" />
       {children}
       <Select name="month" defaultValue={month} className="sm:w-auto">
         {MONTH_NAMES.map((label, i) => (
@@ -34,7 +42,6 @@ export function MonthPicker({
           </option>
         ))}
       </Select>
-      <Button type="submit">View</Button>
     </form>
   );
 }

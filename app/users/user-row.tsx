@@ -99,7 +99,7 @@ export function UserRow({ id, email, name, role, active, isSelf }: Props) {
             required
             minLength={8}
             autoComplete="new-password"
-            className="flex-1"
+            className="min-w-0 flex-1"
           />
           <Button type="submit" loading={pending}>
             Save

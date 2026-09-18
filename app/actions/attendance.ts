@@ -39,7 +39,6 @@ export async function setAttendance(
     companyId,
     otHours,
     payRateSnapshot: String(worker.pay_rate),
-    billRateSnapshot: String(company.bill_rate),
   });
 
   revalidatePath('/attendance');

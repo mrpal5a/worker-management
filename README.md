@@ -10,8 +10,9 @@ from each company.
 ## How it works
 
 - Each **worker** has a daily pay rate — what he is paid for one full day.
-- Each **company** has a daily bill rate — what it is charged for one man-day.
-- The difference is the contractor's margin.
+- A **company** has no rate of its own. What it owes for a man-day is exactly
+  what the worker who came was paid that day — the contractor is a
+  pass-through, not a markup, so there is no separate bill rate and no margin.
 
 One attendance row means one worker worked one full day at one company.
 Absence is the absence of a row. A worker is at exactly one company per day,
@@ -21,9 +22,8 @@ Overtime carries no premium — an OT hour is the plain hourly equivalent of the
 daily rate:
 
 ```
-pay    = pay_rate  + ot_hours × (pay_rate  ÷ 8)
-bill   = bill_rate + ot_hours × (bill_rate ÷ 8)
-margin = bill − pay
+pay  = pay_rate + ot_hours × (pay_rate ÷ 8)
+bill = pay
 ```
 
 ### Rate snapshots
@@ -48,10 +48,10 @@ from the database becomes a `Decimal`.
 |---|---|
 | Attendance | Pick a date, assign each worker a company and OT hours |
 | Workers | Worker register and pay rates |
-| Companies | Company register and bill rates |
+| Companies | Company register |
 | Worker Report | One worker, one month: every day, company, OT, pay, total |
 | Company Report | One company, one month: every day, who came, OT, billed, total |
-| Summary | All worker payouts, all company receivables, margin |
+| Summary | All worker payouts, all company receivables |
 
 ## Setup
 
@@ -73,6 +73,7 @@ into the Supabase **SQL Editor**, and run it:
 
 1. `0001_init.sql` — workers, companies, attendance
 2. `0002_profiles.sql` — accounts
+3. `0003_remove_bill_rate.sql` — drops the company bill rate; billing now mirrors worker pay
 
 Then **turn off self-signup**: Supabase → Authentication → Sign In / Providers →
 Email → disable "Allow new users to sign up". Without this, anyone can register
@@ -94,8 +95,7 @@ npm run dev
 Everyone has their own account. There are two roles:
 
 - **admin** — everything, plus managing accounts.
-- **user** — everything operational: attendance, registers, and all reports
-  including bill rates and margin.
+- **user** — everything operational: attendance, registers, and all reports.
 
 Accounts are created only by an admin, from the **Users** screen. Self-signup is
 disabled, so there is no public registration path.

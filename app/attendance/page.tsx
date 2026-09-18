@@ -2,10 +2,9 @@ import Link from 'next/link';
 import { listWorkers, listCompanies, entriesForDate } from '@/lib/repo';
 import { toDateKey } from '@/lib/date';
 import { AttendanceRow } from './attendance-row';
+import { DateForm } from './date-form';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeroStat } from '@/components/ui/hero-stat';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { CalendarIcon } from '@/components/ui/icons';
 
@@ -43,10 +42,7 @@ export default async function AttendancePage({
         action={<HeroStat value={`${entries.length}/${workers.length}`} label="present" />}
       />
 
-      <form className="mb-2 flex flex-wrap items-center gap-2 sm:gap-3">
-        <Input type="date" name="date" defaultValue={dateKey} className="w-auto min-w-0 flex-1 sm:flex-none" />
-        <Button type="submit">Go</Button>
-      </form>
+      <DateForm dateKey={dateKey} />
 
       {workers.length > 0 && (
         <div className="mb-6 h-1.5 w-full overflow-hidden rounded-full bg-surface-sunken">
@@ -63,7 +59,7 @@ export default async function AttendancePage({
           description={
             <>
               Add one on the{' '}
-              <Link href="/workers" className="text-accent hover:underline">
+              <Link href="/add/workers" className="text-accent hover:underline">
                 Workers
               </Link>{' '}
               page first.
@@ -76,7 +72,7 @@ export default async function AttendancePage({
           description={
             <>
               Add one on the{' '}
-              <Link href="/companies" className="text-accent hover:underline">
+              <Link href="/add/companies" className="text-accent hover:underline">
                 Companies
               </Link>{' '}
               page first.

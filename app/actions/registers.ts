@@ -27,7 +27,7 @@ export async function createWorker(formData: FormData): Promise<ActionResult> {
   if (payRate === null) return { error: 'Day rate must be a number, zero or more.' };
 
   await repo.insertWorker({ name, phone, payRate });
-  revalidatePath('/workers');
+  revalidatePath('/add/workers');
   return { ok: true };
 }
 
@@ -40,7 +40,7 @@ export async function editWorker(id: string, formData: FormData): Promise<Action
   if (payRate === null) return { error: 'Day rate must be a number, zero or more.' };
 
   await repo.updateWorker(id, { name, phone, payRate });
-  revalidatePath('/workers');
+  revalidatePath('/add/workers');
   return { ok: true };
 }
 
@@ -50,7 +50,7 @@ export async function editWorker(id: string, formData: FormData): Promise<Action
  */
 export async function toggleWorker(id: string, active: boolean): Promise<void> {
   await repo.setWorkerActive(id, active);
-  revalidatePath('/workers');
+  revalidatePath('/add/workers');
 }
 
 // ---------------------------------------------------------------------------
@@ -59,29 +59,25 @@ export async function toggleWorker(id: string, active: boolean): Promise<void> {
 
 export async function createCompany(formData: FormData): Promise<ActionResult> {
   const name = String(formData.get('name') ?? '').trim();
-  const billRate = parseRate(formData.get('billRate'));
 
   if (!name) return { error: 'Name is required.' };
-  if (billRate === null) return { error: 'Bill rate must be a number, zero or more.' };
 
-  await repo.insertCompany({ name, billRate });
-  revalidatePath('/companies');
+  await repo.insertCompany({ name });
+  revalidatePath('/add/companies');
   return { ok: true };
 }
 
 export async function editCompany(id: string, formData: FormData): Promise<ActionResult> {
   const name = String(formData.get('name') ?? '').trim();
-  const billRate = parseRate(formData.get('billRate'));
 
   if (!name) return { error: 'Name is required.' };
-  if (billRate === null) return { error: 'Bill rate must be a number, zero or more.' };
 
-  await repo.updateCompany(id, { name, billRate });
-  revalidatePath('/companies');
+  await repo.updateCompany(id, { name });
+  revalidatePath('/add/companies');
   return { ok: true };
 }
 
 export async function toggleCompany(id: string, active: boolean): Promise<void> {
   await repo.setCompanyActive(id, active);
-  revalidatePath('/companies');
+  revalidatePath('/add/companies');
 }

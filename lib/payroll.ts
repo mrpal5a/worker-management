@@ -11,6 +11,11 @@ import Decimal from 'decimal.js';
  * All values are Decimal, never number. Binary floats cannot represent
  * decimal fractions exactly, and across ~2,100 entries a month the rounding
  * error accumulates into totals that do not reconcile.
+ *
+ * A company has no rate of its own: what it owes for one man-day is exactly
+ * what the worker who came was paid for that day. There is deliberately no
+ * separate "bill rate" and no margin — the contractor is a pass-through, not
+ * a markup on top of a worker's wage.
  */
 
 /** A standard working day. Overtime is paid per hour beyond this. */
@@ -19,19 +24,12 @@ export const STANDARD_HOURS = new Decimal(8);
 export interface EntryRates {
   /** Rate snapshot taken when the attendance row was created. */
   payRate: Decimal;
-  /** Rate snapshot taken when the attendance row was created. */
-  billRate: Decimal;
   otHours: Decimal;
 }
 
-export interface EntryAmounts {
-  pay: Decimal;
-  bill: Decimal;
-  margin: Decimal;
-}
-
 /**
- * Pay for one full day plus overtime.
+ * Pay for one full day plus overtime — also what the company that day is
+ * owed, since billing mirrors pay exactly.
  *
  * Overtime carries no premium: an OT hour is the plain hourly equivalent of
  * the daily rate, i.e. rate ÷ 8.
@@ -40,21 +38,9 @@ export function calcPay(payRate: Decimal, otHours: Decimal): Decimal {
   return payRate.plus(payRate.dividedBy(STANDARD_HOURS).times(otHours));
 }
 
-/** Billing for one full day plus overtime. Mirrors calcPay exactly. */
-export function calcBill(billRate: Decimal, otHours: Decimal): Decimal {
-  return billRate.plus(billRate.dividedBy(STANDARD_HOURS).times(otHours));
-}
-
-/** What the contractor keeps on one man-day. Negative if billing below cost. */
-export function calcMargin(bill: Decimal, pay: Decimal): Decimal {
-  return bill.minus(pay);
-}
-
-/** Pay, bill and margin for a single attendance entry. */
-export function calcEntry(rates: EntryRates): EntryAmounts {
-  const pay = calcPay(rates.payRate, rates.otHours);
-  const bill = calcBill(rates.billRate, rates.otHours);
-  return { pay, bill, margin: calcMargin(bill, pay) };
+/** Pay for a single attendance entry. */
+export function calcEntry(rates: EntryRates): { pay: Decimal } {
+  return { pay: calcPay(rates.payRate, rates.otHours) };
 }
 
 /** Sum a list of Decimals, returning 0 for an empty list. */

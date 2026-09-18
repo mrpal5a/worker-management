@@ -54,11 +54,15 @@ export interface WorkerRow {
   created_at: string;
 }
 
-/** Shape of a row in public.companies. */
+/**
+ * Shape of a row in public.companies.
+ *
+ * No rate: a company has no billing rate of its own. What it owes for a
+ * man-day is exactly what the worker who came was paid that day.
+ */
 export interface CompanyRow {
   id: string;
   name: string;
-  bill_rate: Numeric;
   active: boolean;
   created_at: string;
 }
@@ -72,6 +76,5 @@ export interface EntryRow {
   company_id: string;
   ot_hours: Numeric;
   pay_rate_snapshot: Numeric;
-  bill_rate_snapshot: Numeric;
   created_at: string;
 }

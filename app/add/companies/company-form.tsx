@@ -27,15 +27,6 @@ export function CompanyForm() {
     <div className="mb-8 rounded-xl border border-border-base bg-surface-raised p-3 shadow-sm sm:p-4">
       <form ref={formRef} action={onSubmit} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Input name="name" placeholder="Company name" required className="flex-1 sm:min-w-40" />
-        <Input
-          name="billRate"
-          type="number"
-          step="0.01"
-          min="0"
-          placeholder="Bill rate / day"
-          required
-          className="sm:w-40"
-        />
         <Button type="submit" loading={pending}>
           {!pending && <PlusIcon width={16} height={16} />}
           {pending ? 'Adding…' : 'Add'}

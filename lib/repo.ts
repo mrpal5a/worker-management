@@ -1,7 +1,7 @@
 import 'server-only';
 import { getSupabase, type WorkerRow, type CompanyRow, type EntryRow } from './supabase';
 import { toDecimal } from './num';
-import { monthRange, toDateKey } from './date';
+import { monthRange, toDateKey, fromDateKey } from './date';
 import type { ReportRow } from './reports';
 
 /**
@@ -79,21 +79,13 @@ export async function getCompany(id: string): Promise<CompanyRow | null> {
   return data;
 }
 
-export async function insertCompany(input: { name: string; billRate: string }): Promise<void> {
-  const { error } = await getSupabase()
-    .from('companies')
-    .insert({ name: input.name, bill_rate: input.billRate });
+export async function insertCompany(input: { name: string }): Promise<void> {
+  const { error } = await getSupabase().from('companies').insert({ name: input.name });
   fail('insertCompany', error);
 }
 
-export async function updateCompany(
-  id: string,
-  input: { name: string; billRate: string },
-): Promise<void> {
-  const { error } = await getSupabase()
-    .from('companies')
-    .update({ name: input.name, bill_rate: input.billRate })
-    .eq('id', id);
+export async function updateCompany(id: string, input: { name: string }): Promise<void> {
+  const { error } = await getSupabase().from('companies').update({ name: input.name }).eq('id', id);
   fail('updateCompany', error);
 }
 
@@ -125,7 +117,6 @@ export async function upsertEntry(input: {
   companyId: string;
   otHours: string;
   payRateSnapshot: string;
-  billRateSnapshot: string;
 }): Promise<void> {
   const { error } = await getSupabase().from('entries').upsert(
     {
@@ -134,7 +125,6 @@ export async function upsertEntry(input: {
       company_id: input.companyId,
       ot_hours: input.otHours,
       pay_rate_snapshot: input.payRateSnapshot,
-      bill_rate_snapshot: input.billRateSnapshot,
     },
     { onConflict: 'date,worker_id' },
   );
@@ -155,20 +145,19 @@ export async function deleteEntry(dateKey: string, workerId: string): Promise<vo
 // ---------------------------------------------------------------------------
 
 /**
- * Load every attendance row for a month, joined to worker and company names,
- * as the plain ReportRow shape the pure aggregation works on.
+ * Load every attendance row in [startKey, endKeyExclusive), joined to worker
+ * and company names, as the plain ReportRow shape the pure aggregation works
+ * on. Shared by the month and single-day loaders below.
  */
-export async function loadMonth(year: number, month: number): Promise<ReportRow[]> {
-  const { start, end } = monthRange(year, month);
-
+async function loadEntriesBetween(startKey: string, endKeyExclusive: string): Promise<ReportRow[]> {
   const { data, error } = await getSupabase()
     .from('entries')
     .select('*, workers(name), companies(name)')
-    .gte('date', toDateKey(start))
-    .lt('date', toDateKey(end))
+    .gte('date', startKey)
+    .lt('date', endKeyExclusive)
     .order('date');
 
-  fail('loadMonth', error);
+  fail('loadEntriesBetween', error);
 
   type Joined = EntryRow & {
     workers: { name: string } | null;
@@ -182,7 +171,19 @@ export async function loadMonth(year: number, month: number): Promise<ReportRow[
     companyId: e.company_id,
     companyName: e.companies?.name ?? '(deleted company)',
     payRate: toDecimal(e.pay_rate_snapshot),
-    billRate: toDecimal(e.bill_rate_snapshot),
     otHours: toDecimal(e.ot_hours),
   }));
+}
+
+/** Load every attendance row for a month. */
+export async function loadMonth(year: number, month: number): Promise<ReportRow[]> {
+  const { start, end } = monthRange(year, month);
+  return loadEntriesBetween(toDateKey(start), toDateKey(end));
+}
+
+/** Load every attendance row for a single day. */
+export async function loadDay(dateKey: string): Promise<ReportRow[]> {
+  const next = fromDateKey(dateKey);
+  next.setUTCDate(next.getUTCDate() + 1);
+  return loadEntriesBetween(dateKey, toDateKey(next));
 }

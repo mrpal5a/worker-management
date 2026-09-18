@@ -10,11 +10,11 @@ import { StatCard } from '@/components/ui/stat-card';
 import { Card } from '@/components/ui/card';
 import {
   CalendarIcon,
-  UsersIcon,
-  BriefcaseIcon,
+  PlusIcon,
   FileTextIcon,
   BarChartIcon,
   PieChartIcon,
+  AwardIcon,
   ShieldIcon,
   ClockIcon,
   CreditCardIcon,
@@ -58,11 +58,11 @@ export default async function Home() {
 
   const sections: { href: string; label: string; description: string; icon: React.ReactNode }[] = [
     { href: '/attendance', label: 'Attendance', description: 'Mark today’s attendance and OT', icon: <CalendarIcon /> },
-    { href: '/workers', label: 'Workers', description: 'Register and day rates', icon: <UsersIcon /> },
-    { href: '/companies', label: 'Companies', description: 'Register and bill rates', icon: <BriefcaseIcon /> },
+    { href: '/add', label: 'Add', description: 'Register workers and companies', icon: <PlusIcon /> },
     { href: '/reports/worker', label: 'Worker Report', description: 'One worker, one month', icon: <FileTextIcon /> },
     { href: '/reports/company', label: 'Company Report', description: 'One company, one month', icon: <BarChartIcon /> },
     { href: '/reports/summary', label: 'Summary', description: 'Every payout and receivable', icon: <PieChartIcon /> },
+    { href: '/insights', label: 'Insights', description: 'Top performers and trends', icon: <AwardIcon /> },
   ];
   if (session.role === 'admin') {
     sections.push({ href: '/users', label: 'Users', description: 'Manage accounts', icon: <ShieldIcon /> });
@@ -94,13 +94,13 @@ export default async function Home() {
         <StatCard
           icon={<BarChartIcon width={16} height={16} />}
           label="To collect this month"
-          value={money(agg.totals.bill)}
+          value={money(agg.totals.pay)}
           hint={monthLabel(year, month)}
         />
         <StatCard
           icon={<TrendingUpIcon width={16} height={16} />}
-          label="Margin this month"
-          value={money(agg.totals.margin)}
+          label="Man-days this month"
+          value={String(agg.totals.days)}
           hint={monthLabel(year, month)}
         />
       </div>

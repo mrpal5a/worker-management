@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import Decimal from 'decimal.js';
-import { calcPay, calcBill, calcMargin, calcEntry, sum, STANDARD_HOURS } from './payroll';
+import { calcPay, calcEntry, sum, STANDARD_HOURS } from './payroll';
 
 const d = (v: string | number) => new Decimal(v);
 
@@ -36,41 +36,17 @@ describe('calcPay', () => {
   });
 });
 
-describe('calcBill', () => {
-  it('uses the same formula with the bill rate', () => {
-    expect(calcBill(d(800), d(2)).toString()).toBe('1000');
-  });
-
-  it('pays exactly the bill rate with no overtime', () => {
-    expect(calcBill(d(800), d(0)).toString()).toBe('800');
-  });
-});
-
-describe('calcMargin', () => {
-  it('is bill minus pay', () => {
-    expect(calcMargin(d(1000), d(750)).toString()).toBe('250');
-  });
-
-  it('can be negative when billing below cost', () => {
-    expect(calcMargin(d(500), d(600)).toString()).toBe('-100');
-  });
-});
-
 describe('calcEntry', () => {
-  it('computes pay, bill and margin together from snapshots', () => {
-    const r = calcEntry({ payRate: d(600), billRate: d(800), otHours: d(2) });
+  it('computes pay from a rate snapshot', () => {
+    const r = calcEntry({ payRate: d(600), otHours: d(2) });
     expect(r.pay.toString()).toBe('750');
-    expect(r.bill.toString()).toBe('1000');
-    expect(r.margin.toString()).toBe('250');
   });
 
-  it('keeps margin proportional when only overtime differs', () => {
-    const noOt = calcEntry({ payRate: d(600), billRate: d(800), otHours: d(0) });
-    const withOt = calcEntry({ payRate: d(600), billRate: d(800), otHours: d(8) });
-    // A full extra shift of OT should double both sides.
+  it('doubles pay for a full extra shift of overtime', () => {
+    const noOt = calcEntry({ payRate: d(600), otHours: d(0) });
+    const withOt = calcEntry({ payRate: d(600), otHours: d(8) });
     expect(withOt.pay.toString()).toBe('1200');
-    expect(withOt.bill.toString()).toBe('1600');
-    expect(withOt.margin.toString()).toBe(noOt.margin.times(2).toString());
+    expect(withOt.pay.toString()).toBe(noOt.pay.times(2).toString());
   });
 });
 
@@ -82,22 +58,6 @@ describe('sum', () => {
   it('adds without floating point drift', () => {
     const tenth = d('0.1');
     expect(sum([tenth, tenth, tenth]).toString()).toBe('0.3');
-  });
-});
-
-describe('reconciliation invariant', () => {
-  it('sum of pay plus sum of margin equals sum of bill', () => {
-    const entries = [
-      { payRate: d(600), billRate: d(800), otHours: d(2) },
-      { payRate: d(500), billRate: d(650), otHours: d(0) },
-      { payRate: d(450), billRate: d(500), otHours: d('3.5') },
-    ].map(calcEntry);
-
-    const totalPay = sum(entries.map((e) => e.pay));
-    const totalBill = sum(entries.map((e) => e.bill));
-    const totalMargin = sum(entries.map((e) => e.margin));
-
-    expect(totalPay.plus(totalMargin).equals(totalBill)).toBe(true);
   });
 });
 

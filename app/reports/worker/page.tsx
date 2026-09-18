@@ -1,8 +1,12 @@
-import { loadMonth } from '@/lib/repo';
+import { loadMonth, loadDay } from '@/lib/repo';
 import { aggregate } from '@/lib/reports';
-import { calcEntry } from '@/lib/payroll';
+import { calcPay } from '@/lib/payroll';
 import { money, hours, currentMonth, monthLabel } from '@/lib/format';
+import { toDateKey } from '@/lib/date';
 import { MonthPicker } from '../month-picker';
+import { DayPicker } from '../day-picker';
+import { ModeToggle } from '../mode-toggle';
+import { ExportLink } from '../export-link';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeroStat } from '@/components/ui/hero-stat';
 import { Select } from '@/components/ui/select';
@@ -12,12 +16,76 @@ import { FileTextIcon } from '@/components/ui/icons';
 
 export const dynamic = 'force-dynamic';
 
+function dateLabelOf(dateKey: string): string {
+  return new Date(`${dateKey}T00:00:00.000Z`).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 export default async function WorkerReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string; month?: string; workerId?: string }>;
+  searchParams: Promise<{ mode?: string; year?: string; month?: string; workerId?: string; date?: string }>;
 }) {
   const p = await searchParams;
+  const mode = p.mode === 'day' ? 'day' : 'month';
+
+  if (mode === 'day') {
+    const dateKey = p.date ?? toDateKey(new Date());
+    const agg = aggregate(await loadDay(dateKey));
+    const dateLabel = dateLabelOf(dateKey);
+    const workers = [...agg.byWorker.values()];
+
+    return (
+      <main className="mx-auto max-w-5xl p-4 sm:p-6">
+        <PageHeader
+          title="Worker Report"
+          eyebrow={dateLabel}
+          icon={<FileTextIcon />}
+          action={<HeroStat value={money(agg.totals.pay)} label="total pay" />}
+        />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <ModeToggle mode="day" basePath="/reports/worker" />
+          <ExportLink href={`/reports/worker/export?mode=day&date=${dateKey}`} />
+        </div>
+        <DayPicker date={dateKey} />
+
+        {workers.length === 0 ? (
+          <EmptyState title="No attendance recorded" description={`Nobody worked on ${dateLabel}.`} />
+        ) : (
+          <TableWrap>
+            <thead>
+              <tr>
+                <Th>Worker</Th>
+                <Th right>OT hrs</Th>
+                <Th right>Pay</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {workers.map((b) => (
+                <Tr key={b.id}>
+                  <Td>{b.name}</Td>
+                  <Td right>{hours(b.otHours)}</Td>
+                  <Td right>{money(b.pay)}</Td>
+                </Tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="font-semibold">
+                <Td>{workers.length} workers</Td>
+                <Td />
+                <Td right>{money(agg.totals.pay)}</Td>
+              </tr>
+            </tfoot>
+          </TableWrap>
+        )}
+      </main>
+    );
+  }
+
   const fallback = currentMonth();
   const year = Number(p.year) || fallback.year;
   const month = Number(p.month) || fallback.month;
@@ -38,6 +106,12 @@ export default async function WorkerReportPage({
         icon={<FileTextIcon />}
         action={bucket ? <HeroStat value={money(bucket.pay)} label="pay" /> : undefined}
       />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <ModeToggle mode="month" basePath="/reports/worker" />
+        <ExportLink
+          href={`/reports/worker/export?mode=month&year=${year}&month=${month}${workerId ? `&workerId=${workerId}` : ''}`}
+        />
+      </div>
 
       <MonthPicker year={year} month={month}>
         <Select name="workerId" defaultValue={workerId} className="sm:w-auto">
@@ -63,11 +137,7 @@ export default async function WorkerReportPage({
           </thead>
           <tbody>
             {detail.map((r) => {
-              const { pay } = calcEntry({
-                payRate: r.payRate,
-                billRate: r.billRate,
-                otHours: r.otHours,
-              });
+              const pay = calcPay(r.payRate, r.otHours);
               return (
                 <Tr key={r.dateKey}>
                   <Td>{r.dateKey}</Td>

@@ -6,18 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Td, Tr } from '@/components/ui/table';
-import { toDecimal } from '@/lib/num';
-import { money } from '@/lib/format';
-import type { Numeric } from '@/lib/supabase';
 
 interface Props {
   id: string;
   name: string;
-  billRate: Numeric;
   active: boolean;
 }
 
-export function CompanyRow({ id, name, billRate, active }: Props) {
+export function CompanyRow({ id, name, active }: Props) {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -37,19 +33,9 @@ export function CompanyRow({ id, name, billRate, active }: Props) {
   if (editing) {
     return (
       <tr className="border-b border-border-base bg-accent-soft/40">
-        <td colSpan={3} className="py-2.5">
+        <td colSpan={2} className="py-2.5">
           <form action={onSave} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <Input name="name" defaultValue={name} required placeholder="Company name" className="flex-1 sm:min-w-36" />
-            <Input
-              name="billRate"
-              type="number"
-              step="0.01"
-              min="0"
-              defaultValue={String(billRate)}
-              required
-              placeholder="Bill rate / day"
-              className="sm:w-32"
-            />
             <div className="flex gap-2">
               <Button type="submit" loading={pending}>
                 Save
@@ -68,7 +54,6 @@ export function CompanyRow({ id, name, billRate, active }: Props) {
   return (
     <Tr dim={!active}>
       <Td>{name}</Td>
-      <Td right>{money(toDecimal(billRate))}</Td>
       <Td right>
         <div className="flex items-center justify-end gap-1.5">
           <Badge tone={active ? 'success' : 'neutral'}>{active ? 'Active' : 'Inactive'}</Badge>

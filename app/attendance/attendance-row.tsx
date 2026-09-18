@@ -88,7 +88,7 @@ export function AttendanceRow({
           value={companyId}
           onChange={(e) => onCompanyChange(e.target.value)}
           aria-label={`Company for ${workerName}`}
-          className="flex-1"
+          className="min-w-0 flex-1"
         >
           <option value="">— Absent —</option>
           {companies.map((c) => (

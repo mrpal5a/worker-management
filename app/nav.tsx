@@ -7,11 +7,11 @@ import { NavDrawer } from './nav-drawer';
 import { NavLinks, type NavLink } from './nav-links';
 import {
   CalendarIcon,
-  UsersIcon,
-  BriefcaseIcon,
+  PlusIcon,
   FileTextIcon,
   BarChartIcon,
   PieChartIcon,
+  AwardIcon,
   ShieldIcon,
   LogOutIcon,
 } from '@/components/ui/icons';
@@ -36,11 +36,11 @@ export async function Nav({ theme }: { theme: Theme }) {
 
   const links: NavLink[] = [
     { href: '/attendance', label: 'Attendance', icon: <CalendarIcon width={16} height={16} /> },
-    { href: '/workers', label: 'Workers', icon: <UsersIcon width={16} height={16} /> },
-    { href: '/companies', label: 'Companies', icon: <BriefcaseIcon width={16} height={16} /> },
+    { href: '/add', label: 'Add', icon: <PlusIcon width={16} height={16} /> },
     { href: '/reports/worker', label: 'Worker', icon: <FileTextIcon width={16} height={16} /> },
     { href: '/reports/company', label: 'Company', icon: <BarChartIcon width={16} height={16} /> },
     { href: '/reports/summary', label: 'Summary', icon: <PieChartIcon width={16} height={16} /> },
+    { href: '/insights', label: 'Insights', icon: <AwardIcon width={16} height={16} /> },
   ];
   if (session.role === 'admin') {
     links.push({ href: '/users', label: 'Users', icon: <ShieldIcon width={16} height={16} /> });
