@@ -1,6 +1,6 @@
 import { loadMonth, loadDay } from '@/lib/repo';
 import { aggregate } from '@/lib/reports';
-import { money, currentMonth, monthLabel } from '@/lib/format';
+import { money, hours, currentMonth, monthLabel } from '@/lib/format';
 import { toDateKey } from '@/lib/date';
 import { MonthPicker } from '../month-picker';
 import { DayPicker } from '../day-picker';
@@ -78,6 +78,7 @@ export default async function SummaryPage({
                 <tr>
                   <Th>Worker</Th>
                   <Th right>Days</Th>
+                  <Th right>OT hrs</Th>
                   <Th right>Pay</Th>
                 </tr>
               </thead>
@@ -86,6 +87,7 @@ export default async function SummaryPage({
                   <Tr key={b.id}>
                     <Td>{b.name}</Td>
                     <Td right>{b.days}</Td>
+                    <Td right>{hours(b.otHours)}</Td>
                     <Td right>{money(b.pay)}</Td>
                   </Tr>
                 ))}
@@ -99,6 +101,7 @@ export default async function SummaryPage({
               <tr>
                 <Th>Company</Th>
                 <Th right>Man-days</Th>
+                <Th right>OT hrs</Th>
                 <Th right>Billed</Th>
               </tr>
             </thead>
@@ -107,6 +110,7 @@ export default async function SummaryPage({
                 <Tr key={b.id}>
                   <Td>{b.name}</Td>
                   <Td right>{b.days}</Td>
+                  <Td right>{hours(b.otHours)}</Td>
                   <Td right>{money(b.pay)}</Td>
                 </Tr>
               ))}

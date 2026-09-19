@@ -14,15 +14,19 @@ export async function GET(request: NextRequest) {
 
   if (mode === 'day') {
     const dateKey = sp.get('date') ?? toDateKey(new Date());
-    const agg = aggregate(await loadDay(dateKey));
+    const dayRows = await loadDay(dateKey);
+    const agg = aggregate(dayRows);
+    // One entry per worker per day, so each worker maps to exactly one company.
+    const companyOf = new Map(dayRows.map((r) => [r.workerId, r.companyName]));
 
     const csvRows = [...agg.byWorker.values()].map((b) => [
       dateKey,
       b.name,
+      companyOf.get(b.id) ?? '',
       b.otHours.toString(),
       b.pay.toFixed(2),
     ]);
-    const csv = toCsv(['Date', 'Worker', 'OT hours', 'Pay (INR)'], csvRows);
+    const csv = toCsv(['Date', 'Worker', 'Company', 'OT hours', 'Pay (INR)'], csvRows);
 
     return new Response(csv, {
       headers: {

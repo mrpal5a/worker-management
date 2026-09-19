@@ -1,5 +1,12 @@
 import 'server-only';
-import { getSupabase, type WorkerRow, type CompanyRow, type EntryRow } from './supabase';
+import {
+  getSupabase,
+  type WorkerRow,
+  type CompanyRow,
+  type EntryRow,
+  type AdvanceRow,
+  type AdvancePaymentRow,
+} from './supabase';
 import { toDecimal } from './num';
 import { monthRange, toDateKey, fromDateKey } from './date';
 import type { ReportRow } from './reports';
@@ -186,4 +193,75 @@ export async function loadDay(dateKey: string): Promise<ReportRow[]> {
   const next = fromDateKey(dateKey);
   next.setUTCDate(next.getUTCDate() + 1);
   return loadEntriesBetween(dateKey, toDateKey(next));
+}
+
+// ---------------------------------------------------------------------------
+// Advances
+// ---------------------------------------------------------------------------
+
+export interface AdvanceWithPayments extends AdvanceRow {
+  workers: { name: string } | null;
+  advance_payments: AdvancePaymentRow[];
+}
+
+/** Every advance, each with its worker's name and its full repayment ledger nested in. */
+export async function listAdvances(): Promise<AdvanceWithPayments[]> {
+  const { data, error } = await getSupabase()
+    .from('advances')
+    .select('*, workers(name), advance_payments(*)')
+    .order('created_at', { ascending: false });
+  fail('listAdvances', error);
+  return (data ?? []) as AdvanceWithPayments[];
+}
+
+/** Create an advance and return its id, so an opening "already paid" row can be attached to it. */
+export async function insertAdvance(input: {
+  workerId: string;
+  principal: string;
+  monthlyDeduction: string;
+  note: string | null;
+}): Promise<string> {
+  const { data, error } = await getSupabase()
+    .from('advances')
+    .insert({
+      worker_id: input.workerId,
+      principal: input.principal,
+      monthly_deduction: input.monthlyDeduction,
+      note: input.note,
+    })
+    .select('id')
+    .single();
+  fail('insertAdvance', error);
+  return (data as { id: string }).id;
+}
+
+export async function insertAdvancePayment(input: {
+  advanceId: string;
+  paidOn: string;
+  amount: string;
+  note: string | null;
+}): Promise<void> {
+  const { error } = await getSupabase().from('advance_payments').insert({
+    advance_id: input.advanceId,
+    paid_on: input.paidOn,
+    amount: input.amount,
+    note: input.note,
+  });
+  fail('insertAdvancePayment', error);
+}
+
+/** Removes one repayment record — for correcting a mistaken entry. */
+export async function deleteAdvancePayment(id: string): Promise<void> {
+  const { error } = await getSupabase().from('advance_payments').delete().eq('id', id);
+  fail('deleteAdvancePayment', error);
+}
+
+/**
+ * Removes an advance entirely — for a mistaken/test entry, not for closing a
+ * settled one (a settled advance is kept as history). Its repayment ledger is
+ * removed with it via the advance_payments foreign key's ON DELETE CASCADE.
+ */
+export async function deleteAdvance(id: string): Promise<void> {
+  const { error } = await getSupabase().from('advances').delete().eq('id', id);
+  fail('deleteAdvance', error);
 }

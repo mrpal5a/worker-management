@@ -12,6 +12,7 @@ import {
   BarChartIcon,
   PieChartIcon,
   AwardIcon,
+  WalletIcon,
   ShieldIcon,
   LogOutIcon,
 } from '@/components/ui/icons';
@@ -41,6 +42,7 @@ export async function Nav({ theme }: { theme: Theme }) {
     { href: '/reports/company', label: 'Company', icon: <BarChartIcon width={16} height={16} /> },
     { href: '/reports/summary', label: 'Summary', icon: <PieChartIcon width={16} height={16} /> },
     { href: '/insights', label: 'Insights', icon: <AwardIcon width={16} height={16} /> },
+    { href: '/advances', label: 'Advances', icon: <WalletIcon width={16} height={16} /> },
   ];
   if (session.role === 'admin') {
     links.push({ href: '/users', label: 'Users', icon: <ShieldIcon width={16} height={16} /> });

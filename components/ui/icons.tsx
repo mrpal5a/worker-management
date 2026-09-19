@@ -205,3 +205,12 @@ export function TrendingUpIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function WalletIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5z" />
+      <path d="M16 12a2 2 0 1 0 0 4h5v-4z" />
+    </Icon>
+  );
+}

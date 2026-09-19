@@ -61,19 +61,27 @@ export default async function InsightsPage() {
   const topWorker = workerList[0];
   const topCompany = companyList[0];
 
-  const trendPoints = months.map((m, i) => ({
-    label: MONTH_NAMES[m.month - 1].slice(0, 3),
-    value: aggregate(monthRowsList[i]).totals.pay.toNumber(),
-  }));
+  const trendPoints = months.map((m, i) => {
+    const value = aggregate(monthRowsList[i]).totals.pay;
+    return {
+      label: MONTH_NAMES[m.month - 1].slice(0, 3),
+      value: value.toNumber(),
+      formattedValue: money(value),
+    };
+  });
 
-  const dailyTotals = new Map<string, number>();
+  const dailyTotals = new Map<string, Decimal>();
   for (const r of currentRows) {
-    const pay = calcPay(r.payRate, r.otHours).toNumber();
-    dailyTotals.set(r.dateKey, (dailyTotals.get(r.dateKey) ?? 0) + pay);
+    const pay = calcPay(r.payRate, r.otHours);
+    dailyTotals.set(r.dateKey, (dailyTotals.get(r.dateKey) ?? new Decimal(0)).plus(pay));
   }
   const dailyPoints = [...dailyTotals.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([dateKey, value]) => ({ label: String(Number(dateKey.slice(-2))), value }));
+    .map(([dateKey, value]) => ({
+      label: String(Number(dateKey.slice(-2))),
+      value: value.toNumber(),
+      formattedValue: money(value),
+    }));
 
   const topCompanies = companyList.slice(0, 6);
   const restCompanies = companyList.slice(6);
@@ -167,16 +175,12 @@ export default async function InsightsPage() {
             <Card>
               <h2 className="font-semibold">Payroll trend</h2>
               <p className="mb-4 text-sm text-text-muted">Last {TREND_MONTHS} months</p>
-              <TrendBars points={trendPoints} formatValue={(v) => money(new Decimal(v))} emphasizeLast />
+              <TrendBars points={trendPoints} emphasizeLast />
             </Card>
             <Card>
               <h2 className="font-semibold">Daily payroll</h2>
               <p className="mb-4 text-sm text-text-muted">{monthLabel(year, month)}</p>
-              <TrendBars
-                points={dailyPoints}
-                formatValue={(v) => money(new Decimal(v))}
-                showLabels={dailyPoints.length <= 12}
-              />
+              <TrendBars points={dailyPoints} showLabels={dailyPoints.length <= 12} />
             </Card>
           </div>
 

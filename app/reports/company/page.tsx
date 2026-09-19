@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { loadMonth, loadDay } from '@/lib/repo';
 import { aggregate } from '@/lib/reports';
 import { calcPay } from '@/lib/payroll';
@@ -35,17 +36,22 @@ export default async function CompanyReportPage({
 
   if (mode === 'day') {
     const dateKey = p.date ?? toDateKey(new Date());
-    const agg = aggregate(await loadDay(dateKey));
+    const dayRows = await loadDay(dateKey);
+    const agg = aggregate(dayRows);
     const dateLabel = dateLabelOf(dateKey);
     const companies = [...agg.byCompany.values()];
+
+    const companyId = p.companyId && agg.byCompany.has(p.companyId) ? p.companyId : undefined;
+    const bucket = companyId ? agg.byCompany.get(companyId) : undefined;
+    const detail = bucket ? dayRows.filter((r) => r.companyId === companyId) : [];
 
     return (
       <main className="mx-auto max-w-5xl p-4 sm:p-6">
         <PageHeader
           title="Company Report"
-          eyebrow={dateLabel}
+          eyebrow={bucket ? `${bucket.name} — ${dateLabel}` : dateLabel}
           icon={<BarChartIcon />}
-          action={<HeroStat value={money(agg.totals.pay)} label="total billed" />}
+          action={<HeroStat value={money(bucket ? bucket.pay : agg.totals.pay)} label={bucket ? 'billed' : 'total billed'} />}
         />
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <ModeToggle mode="day" basePath="/reports/company" />
@@ -55,6 +61,43 @@ export default async function CompanyReportPage({
 
         {companies.length === 0 ? (
           <EmptyState title="No attendance recorded" description={`Nobody worked on ${dateLabel}.`} />
+        ) : bucket ? (
+          <>
+            <Link
+              href={`/reports/company?mode=day&date=${dateKey}`}
+              className="mb-3 inline-block text-sm text-accent hover:underline"
+            >
+              ← All companies
+            </Link>
+            <TableWrap>
+              <thead>
+                <tr>
+                  <Th>Worker</Th>
+                  <Th right>OT hrs</Th>
+                  <Th right>Billed</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {detail.map((r) => {
+                  const bill = calcPay(r.payRate, r.otHours);
+                  return (
+                    <Tr key={r.workerId}>
+                      <Td>{r.workerName}</Td>
+                      <Td right>{hours(r.otHours)}</Td>
+                      <Td right>{money(bill)}</Td>
+                    </Tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="font-semibold">
+                  <Td>{detail.length} workers</Td>
+                  <Td right>{hours(bucket.otHours)}</Td>
+                  <Td right>{money(bucket.pay)}</Td>
+                </tr>
+              </tfoot>
+            </TableWrap>
+          </>
         ) : (
           <TableWrap>
             <thead>
@@ -68,7 +111,11 @@ export default async function CompanyReportPage({
             <tbody>
               {companies.map((b) => (
                 <Tr key={b.id}>
-                  <Td>{b.name}</Td>
+                  <Td>
+                    <Link href={`/reports/company?mode=day&date=${dateKey}&companyId=${b.id}`} className="text-accent hover:underline">
+                      {b.name}
+                    </Link>
+                  </Td>
                   <Td right>{b.days}</Td>
                   <Td right>{hours(b.otHours)}</Td>
                   <Td right>{money(b.pay)}</Td>

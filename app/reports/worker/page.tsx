@@ -35,9 +35,12 @@ export default async function WorkerReportPage({
 
   if (mode === 'day') {
     const dateKey = p.date ?? toDateKey(new Date());
-    const agg = aggregate(await loadDay(dateKey));
+    const dayRows = await loadDay(dateKey);
+    const agg = aggregate(dayRows);
     const dateLabel = dateLabelOf(dateKey);
     const workers = [...agg.byWorker.values()];
+    // One entry per worker per day, so each worker maps to exactly one company.
+    const companyOf = new Map(dayRows.map((r) => [r.workerId, r.companyName]));
 
     return (
       <main className="mx-auto max-w-5xl p-4 sm:p-6">
@@ -60,6 +63,7 @@ export default async function WorkerReportPage({
             <thead>
               <tr>
                 <Th>Worker</Th>
+                <Th>Company</Th>
                 <Th right>OT hrs</Th>
                 <Th right>Pay</Th>
               </tr>
@@ -68,6 +72,7 @@ export default async function WorkerReportPage({
               {workers.map((b) => (
                 <Tr key={b.id}>
                   <Td>{b.name}</Td>
+                  <Td>{companyOf.get(b.id) ?? '—'}</Td>
                   <Td right>{hours(b.otHours)}</Td>
                   <Td right>{money(b.pay)}</Td>
                 </Tr>
@@ -76,6 +81,7 @@ export default async function WorkerReportPage({
             <tfoot>
               <tr className="font-semibold">
                 <Td>{workers.length} workers</Td>
+                <Td />
                 <Td />
                 <Td right>{money(agg.totals.pay)}</Td>
               </tr>

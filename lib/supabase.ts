@@ -78,3 +78,24 @@ export interface EntryRow {
   pay_rate_snapshot: Numeric;
   created_at: string;
 }
+
+/** Shape of a row in public.advances — one interest-free loan a worker took. */
+export interface AdvanceRow {
+  id: string;
+  worker_id: string;
+  principal: Numeric;
+  monthly_deduction: Numeric;
+  note: string | null;
+  created_at: string;
+}
+
+/** Shape of a row in public.advance_payments — one repayment against an advance. */
+export interface AdvancePaymentRow {
+  id: string;
+  advance_id: string;
+  /** 'YYYY-MM-DD' — Postgres DATE has no time component. */
+  paid_on: string;
+  amount: Numeric;
+  note: string | null;
+  created_at: string;
+}
