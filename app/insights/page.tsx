@@ -3,12 +3,15 @@ import { listWorkers, listCompanies, loadMonth } from '@/lib/repo';
 import { aggregate } from '@/lib/reports';
 import { calcPay, sum } from '@/lib/payroll';
 import { money, currentMonth, monthLabel, MONTH_NAMES } from '@/lib/format';
+import { lastNMonths } from '@/lib/date';
+import { buildAttendanceHeatmap } from '@/lib/attendance';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeroStat } from '@/components/ui/hero-stat';
 import { StatCard } from '@/components/ui/stat-card';
 import { Card } from '@/components/ui/card';
 import { BarList } from '@/components/ui/bar-list';
 import { TrendBars } from '@/components/ui/trend-bars';
+import { AttendanceHeatmap } from '@/components/ui/attendance-heatmap';
 import { ShareBar } from '@/components/ui/share-bar';
 import { SpotlightCard } from '@/components/ui/spotlight-card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -32,19 +35,12 @@ const SERIES_COLORS = [
 ];
 
 const TREND_MONTHS = 6;
-
-function lastNMonths(year: number, month: number, n: number): { year: number; month: number }[] {
-  const out: { year: number; month: number }[] = [];
-  for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(Date.UTC(year, month - 1 - i, 1));
-    out.push({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 });
-  }
-  return out;
-}
+const HEATMAP_MONTHS = 12;
 
 export default async function InsightsPage() {
   const { year, month } = currentMonth();
-  const months = lastNMonths(year, month, TREND_MONTHS);
+  const months = lastNMonths(year, month, HEATMAP_MONTHS);
+  const trendMonths = months.slice(-TREND_MONTHS);
 
   const [workers, companies, monthRowsList] = await Promise.all([
     listWorkers(),
@@ -61,8 +57,9 @@ export default async function InsightsPage() {
   const topWorker = workerList[0];
   const topCompany = companyList[0];
 
-  const trendPoints = months.map((m, i) => {
-    const value = aggregate(monthRowsList[i]).totals.pay;
+  const trendRowsList = monthRowsList.slice(-TREND_MONTHS);
+  const trendPoints = trendMonths.map((m, i) => {
+    const value = aggregate(trendRowsList[i]).totals.pay;
     return {
       label: MONTH_NAMES[m.month - 1].slice(0, 3),
       value: value.toNumber(),
@@ -83,6 +80,14 @@ export default async function InsightsPage() {
       formattedValue: money(value),
     }));
 
+  const totalWorkers = workers.filter((w) => w.active).length;
+  const { cells: heatCells, monthMarkers, weeksCount, avgAttendance } = buildAttendanceHeatmap(
+    monthRowsList.flat(),
+    months,
+    totalWorkers,
+    new Date(),
+  );
+
   const topCompanies = companyList.slice(0, 6);
   const restCompanies = companyList.slice(6);
   const restDays = restCompanies.reduce((a, c) => a + c.days, 0);
@@ -96,7 +101,7 @@ export default async function InsightsPage() {
     .sort((a, b) => b.otHours.minus(a.otHours).toNumber())
     .slice(0, 5);
 
-  const activeWorkers = workers.filter((w) => w.active).length;
+  const activeWorkers = totalWorkers;
   const activeCompanies = companies.filter((c) => c.active).length;
   const avgOtPerEntry =
     currentRows.length > 0 ? sum(currentRows.map((r) => r.otHours)).dividedBy(currentRows.length) : new Decimal(0);
@@ -183,6 +188,16 @@ export default async function InsightsPage() {
               <TrendBars points={dailyPoints} showLabels={dailyPoints.length <= 12} />
             </Card>
           </div>
+
+          {heatCells.length > 0 && (
+            <Card className="mb-6">
+              <h2 className="font-semibold">Daily attendance</h2>
+              <p className="mb-4 text-sm text-text-muted">
+                Workers present out of {totalWorkers} total, past {HEATMAP_MONTHS} months · avg {avgAttendance}/{totalWorkers} on days worked
+              </p>
+              <AttendanceHeatmap cells={heatCells} monthMarkers={monthMarkers} weeksCount={weeksCount} />
+            </Card>
+          )}
 
           <Card className="mb-6">
             <h2 className="font-semibold">Workforce distribution</h2>

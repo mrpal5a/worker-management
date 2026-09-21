@@ -23,14 +23,22 @@ export function TrendBars({
   points,
   emphasizeLast = false,
   showLabels = true,
+  max: maxOverride,
 }: {
   points: TrendPoint[];
   emphasizeLast?: boolean;
   /** Off for dense series (e.g. every day of a month) where ~30 tick labels would collide. */
   showLabels?: boolean;
+  /**
+   * Denominator to scale bar heights against, e.g. total workforce size for an
+   * attendance chart. Without it, heights are relative to the busiest point in
+   * the series, which is right for a plain trend but wrong when every bar
+   * needs to read against the same fixed ceiling.
+   */
+  max?: number;
 }) {
   const [active, setActive] = useState<number | null>(null);
-  const max = Math.max(...points.map((p) => p.value), 1);
+  const max = Math.max(maxOverride ?? 0, ...points.map((p) => p.value), 1);
   const lastIndex = points.length - 1;
   const defaultShown = emphasizeLast ? lastIndex : null;
   const shown = active ?? defaultShown;

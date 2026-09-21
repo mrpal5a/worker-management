@@ -4,10 +4,12 @@ import { currentSession } from '@/lib/current-user';
 import { getProfile } from '@/lib/users';
 import { listWorkers, listCompanies, entriesForDate, loadMonth } from '@/lib/repo';
 import { aggregate } from '@/lib/reports';
-import { toDateKey } from '@/lib/date';
+import { toDateKey, lastNMonths } from '@/lib/date';
+import { buildAttendanceHeatmap } from '@/lib/attendance';
 import { money, currentMonth, monthLabel } from '@/lib/format';
 import { StatCard } from '@/components/ui/stat-card';
 import { Card } from '@/components/ui/card';
+import { AttendanceHeatmap } from '@/components/ui/attendance-heatmap';
 import {
   CalendarIcon,
   PlusIcon,
@@ -23,6 +25,8 @@ import {
 } from '@/components/ui/icons';
 
 export const dynamic = 'force-dynamic';
+
+const HEATMAP_MONTHS = 12;
 
 function greeting(hour: number): string {
   if (hour < 12) return 'Good morning';
@@ -46,15 +50,19 @@ export default async function Home() {
   });
 
   const { year, month } = currentMonth();
+  const months = lastNMonths(year, month, HEATMAP_MONTHS);
 
-  const [workers, companies, entries, monthRows] = await Promise.all([
+  const [workers, companies, entries, monthRowsList] = await Promise.all([
     listWorkers(),
     listCompanies(),
     entriesForDate(todayKey),
-    loadMonth(year, month),
+    Promise.all(months.map((m) => loadMonth(m.year, m.month))),
   ]);
 
+  const monthRows = monthRowsList[monthRowsList.length - 1];
   const agg = aggregate(monthRows);
+  const totalWorkers = workers.filter((w) => w.active).length;
+  const heatmap = buildAttendanceHeatmap(monthRowsList.flat(), months, totalWorkers, new Date());
 
   const sections: { href: string; label: string; description: string; icon: React.ReactNode }[] = [
     { href: '/attendance', label: 'Attendance', description: 'Mark today’s attendance and OT', icon: <CalendarIcon /> },
@@ -77,6 +85,14 @@ export default async function Home() {
         </h1>
         <p className="mt-1 text-sm text-text-muted">Here&rsquo;s where things stand today.</p>
       </div>
+
+      <Card className="mb-8">
+        <h2 className="font-semibold">Daily attendance</h2>
+        <p className="mb-4 text-sm text-text-muted">
+          Workers present out of {totalWorkers} total, past {HEATMAP_MONTHS} months · avg {heatmap.avgAttendance}/{totalWorkers} on days worked
+        </p>
+        <AttendanceHeatmap cells={heatmap.cells} monthMarkers={heatmap.monthMarkers} weeksCount={heatmap.weeksCount} />
+      </Card>
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

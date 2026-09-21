@@ -38,3 +38,13 @@ export function daysInMonth(year: number, month: number): number {
   // Day 0 of the next month is the last day of this one.
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
+
+/** The `n` months ending with (and including) the given one, oldest first. */
+export function lastNMonths(year: number, month: number, n: number): { year: number; month: number }[] {
+  const out: { year: number; month: number }[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(year, month - 1 - i, 1));
+    out.push({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 });
+  }
+  return out;
+}
