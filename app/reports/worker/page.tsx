@@ -11,7 +11,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HeroStat } from '@/components/ui/hero-stat';
 import { Select } from '@/components/ui/select';
 import { TableWrap, Th, Td, Tr } from '@/components/ui/table';
-import { SearchScope, SearchTr } from '@/components/ui/search';
+import { SearchScope, SearchTr, SearchTfoot } from '@/components/ui/search';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FileTextIcon } from '@/components/ui/icons';
@@ -88,14 +88,16 @@ export default async function WorkerReportPage({
                   </SearchTr>
                 ))}
               </tbody>
-              <tfoot>
-                <tr className="font-semibold">
-                  <Td>{workers.length} workers</Td>
-                  <Td />
-                  <Td />
-                  <Td right>{money(agg.totals.pay)}</Td>
-                </tr>
-              </tfoot>
+              <SearchTfoot
+                noun={{ one: 'worker', many: 'workers' }}
+                cells={['count', 'blank', 'blank', 'amount']}
+                rows={workers.map((b) => ({
+                  text: `${b.name} ${companyOf.get(b.id) ?? ''}`,
+                  days: b.days,
+                  ot: b.otHours.toString(),
+                  amount: b.pay.toString(),
+                }))}
+              />
             </TableWrap>
           </SearchScope>
         )}

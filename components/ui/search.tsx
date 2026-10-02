@@ -3,7 +3,9 @@
 import { createContext, useContext, useState } from 'react';
 import { Input } from './input';
 import { SearchIcon } from './icons';
-import { Tr } from './table';
+import Decimal from 'decimal.js';
+import { Td, Tr } from './table';
+import { money, hours } from '@/lib/format';
 import { matchesQuery } from '@/lib/search';
 
 /**
@@ -14,11 +16,17 @@ import { matchesQuery } from '@/lib/search';
  * rather than unmount so any in-progress edit state survives a search.
  */
 
-const SearchContext = createContext<(text: string) => boolean>(() => true);
+interface SearchState {
+  match: (text: string) => boolean;
+  /** True while the box holds a non-blank query. */
+  active: boolean;
+}
+
+const SearchContext = createContext<SearchState>({ match: () => true, active: false });
 
 /** True when the row whose searchable text is `text` matches the current query. */
 export function useSearchMatch(text: string): boolean {
-  return useContext(SearchContext)(text);
+  return useContext(SearchContext).match(text);
 }
 
 export function SearchScope({
@@ -39,7 +47,7 @@ export function SearchScope({
   const matchCount = haystacks.filter((h) => matchesQuery(query, h)).length;
 
   return (
-    <SearchContext.Provider value={(text) => matchesQuery(query, text)}>
+    <SearchContext.Provider value={{ match: (text) => matchesQuery(query, text), active }}>
       <div className="relative mb-3">
         <SearchIcon
           width={16}
@@ -73,4 +81,65 @@ export function SearchScope({
 export function SearchTr({ text, children }: { text: string; children: React.ReactNode }) {
   const match = useSearchMatch(text);
   return <Tr className={match ? '' : 'hidden'}>{children}</Tr>;
+}
+
+/** One table row's contribution to a `SearchTfoot`. Strings, not Decimals: these cross the server→client boundary. */
+export interface TotalsRow {
+  text: string;
+  /** Days this row counts for — 0.5 for a half day. */
+  days: number;
+  ot: string;
+  amount: string;
+}
+
+/** What a footer cell shows: a row count, a day total, OT hours, money, or nothing. */
+export type TotalsCell = 'count' | 'days' | 'ot' | 'amount' | 'blank';
+
+/**
+ * A table footer whose totals cover only the rows the search leaves visible,
+ * so the bottom line always matches what is on screen.
+ */
+export function SearchTfoot({
+  rows,
+  cells,
+  noun,
+}: {
+  rows: TotalsRow[];
+  cells: TotalsCell[];
+  /** Label after the number in the `count` or `days` cell, singular and plural. */
+  noun: { one: string; many: string };
+}) {
+  const { match, active } = useContext(SearchContext);
+  const shown = rows.filter((r) => match(r.text));
+  const days = shown.reduce((a, r) => a + r.days, 0);
+  const ot = shown.reduce((a, r) => a.plus(r.ot), new Decimal(0));
+  const amount = shown.reduce((a, r) => a.plus(r.amount), new Decimal(0));
+
+  const label = (n: number) => (
+    <>
+      {n} {n === 1 ? noun.one : noun.many}
+      {active && <span className="ml-1.5 text-xs font-normal text-text-muted">(matching search)</span>}
+    </>
+  );
+
+  return (
+    <tfoot>
+      <tr className="font-semibold">
+        {cells.map((c, i) => {
+          switch (c) {
+            case 'count':
+              return <Td key={i}>{label(shown.length)}</Td>;
+            case 'days':
+              return <Td key={i}>{label(days)}</Td>;
+            case 'ot':
+              return <Td key={i} right>{hours(ot)}</Td>;
+            case 'amount':
+              return <Td key={i} right>{money(amount)}</Td>;
+            default:
+              return <Td key={i} />;
+          }
+        })}
+      </tr>
+    </tfoot>
+  );
 }
