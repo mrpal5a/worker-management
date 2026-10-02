@@ -9,7 +9,8 @@ import { ExportLink } from '../export-link';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeroStat } from '@/components/ui/hero-stat';
 import { StatCard } from '@/components/ui/stat-card';
-import { TableWrap, Th, Td, Tr } from '@/components/ui/table';
+import { TableWrap, Th, Td } from '@/components/ui/table';
+import { SearchScope, SearchTr } from '@/components/ui/search';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PieChartIcon, CreditCardIcon, BarChartIcon } from '@/components/ui/icons';
 
@@ -70,7 +71,11 @@ export default async function SummaryPage({
       {agg.totals.days === 0 ? (
         <EmptyState title="No attendance recorded" description={emptyDescription} />
       ) : (
-        <>
+        <SearchScope
+          haystacks={[...agg.byWorker.values(), ...agg.byCompany.values()].map((b) => b.name)}
+          placeholder="Search workers or companies…"
+          noun="rows"
+        >
           <h2 className="mb-2 font-semibold">Workers — to pay</h2>
           <div className="mb-8">
             <TableWrap>
@@ -84,12 +89,12 @@ export default async function SummaryPage({
               </thead>
               <tbody>
                 {[...agg.byWorker.values()].map((b) => (
-                  <Tr key={b.id}>
+                  <SearchTr key={b.id} text={b.name}>
                     <Td>{b.name}</Td>
                     <Td right>{b.days}</Td>
                     <Td right>{hours(b.otHours)}</Td>
                     <Td right>{money(b.pay)}</Td>
-                  </Tr>
+                  </SearchTr>
                 ))}
               </tbody>
             </TableWrap>
@@ -107,16 +112,16 @@ export default async function SummaryPage({
             </thead>
             <tbody>
               {[...agg.byCompany.values()].map((b) => (
-                <Tr key={b.id}>
+                <SearchTr key={b.id} text={b.name}>
                   <Td>{b.name}</Td>
                   <Td right>{b.days}</Td>
                   <Td right>{hours(b.otHours)}</Td>
                   <Td right>{money(b.pay)}</Td>
-                </Tr>
+                </SearchTr>
               ))}
             </tbody>
           </TableWrap>
-        </>
+        </SearchScope>
       )}
     </main>
   );

@@ -75,6 +75,8 @@ export interface EntryRow {
   worker_id: string;
   company_id: string;
   ot_hours: Numeric;
+  /** 1 for a full day, 0.5 for a half day. */
+  day_fraction: Numeric;
   pay_rate_snapshot: Numeric;
   created_at: string;
 }

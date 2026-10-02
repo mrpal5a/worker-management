@@ -11,6 +11,8 @@ import { PageHeader } from '@/components/ui/page-header';
 import { HeroStat } from '@/components/ui/hero-stat';
 import { Select } from '@/components/ui/select';
 import { TableWrap, Th, Td, Tr } from '@/components/ui/table';
+import { SearchScope, SearchTr } from '@/components/ui/search';
+import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FileTextIcon } from '@/components/ui/icons';
 
@@ -59,34 +61,43 @@ export default async function WorkerReportPage({
         {workers.length === 0 ? (
           <EmptyState title="No attendance recorded" description={`Nobody worked on ${dateLabel}.`} />
         ) : (
-          <TableWrap>
-            <thead>
-              <tr>
-                <Th>Worker</Th>
-                <Th>Company</Th>
-                <Th right>OT hrs</Th>
-                <Th right>Pay</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {workers.map((b) => (
-                <Tr key={b.id}>
-                  <Td>{b.name}</Td>
-                  <Td>{companyOf.get(b.id) ?? '—'}</Td>
-                  <Td right>{hours(b.otHours)}</Td>
-                  <Td right>{money(b.pay)}</Td>
-                </Tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="font-semibold">
-                <Td>{workers.length} workers</Td>
-                <Td />
-                <Td />
-                <Td right>{money(agg.totals.pay)}</Td>
-              </tr>
-            </tfoot>
-          </TableWrap>
+          <SearchScope
+            haystacks={workers.map((b) => `${b.name} ${companyOf.get(b.id) ?? ''}`)}
+            placeholder="Search by worker or company…"
+            noun="workers"
+          >
+            <TableWrap>
+              <thead>
+                <tr>
+                  <Th>Worker</Th>
+                  <Th>Company</Th>
+                  <Th right>OT hrs</Th>
+                  <Th right>Pay</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {workers.map((b) => (
+                  <SearchTr key={b.id} text={`${b.name} ${companyOf.get(b.id) ?? ''}`}>
+                    <Td>
+                      {b.name}
+                      {b.days < 1 && <Badge tone="warning" className="ml-1.5">Half day</Badge>}
+                    </Td>
+                    <Td>{companyOf.get(b.id) ?? '—'}</Td>
+                    <Td right>{hours(b.otHours)}</Td>
+                    <Td right>{money(b.pay)}</Td>
+                  </SearchTr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="font-semibold">
+                  <Td>{workers.length} workers</Td>
+                  <Td />
+                  <Td />
+                  <Td right>{money(agg.totals.pay)}</Td>
+                </tr>
+              </tfoot>
+            </TableWrap>
+          </SearchScope>
         )}
       </main>
     );
@@ -143,10 +154,13 @@ export default async function WorkerReportPage({
           </thead>
           <tbody>
             {detail.map((r) => {
-              const pay = calcPay(r.payRate, r.otHours);
+              const pay = calcPay(r.payRate, r.otHours, r.dayFraction);
               return (
                 <Tr key={r.dateKey}>
-                  <Td>{r.dateKey}</Td>
+                  <Td>
+                    {r.dateKey}
+                    {r.dayFraction.lessThan(1) && <Badge tone="warning" className="ml-1.5">Half day</Badge>}
+                  </Td>
                   <Td>{r.companyName}</Td>
                   <Td right>{hours(r.otHours)}</Td>
                   <Td right>{money(pay)}</Td>

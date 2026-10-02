@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Td, Tr } from '@/components/ui/table';
+import { useSearchMatch } from '@/components/ui/search';
 import type { Numeric } from '@/lib/supabase';
 
 interface Payment {
@@ -34,6 +35,7 @@ export function AdvanceRow({ id, workerName, principal, monthlyDeduction, note, 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const hidden = useSearchMatch(`${workerName} ${note ?? ''}`) ? '' : 'hidden';
 
   const principalD = toDecimal(principal);
   const monthlyD = toDecimal(monthlyDeduction);
@@ -68,7 +70,7 @@ export function AdvanceRow({ id, workerName, principal, monthlyDeduction, note, 
 
   return (
     <>
-      <Tr>
+      <Tr className={hidden}>
         <Td>{workerName}</Td>
         <Td right>{money(principalD)}</Td>
         <Td right>{money(paid)}</Td>
@@ -98,7 +100,7 @@ export function AdvanceRow({ id, workerName, principal, monthlyDeduction, note, 
         </Td>
       </Tr>
       {expanded && (
-        <tr className="border-b border-border-base bg-surface-sunken/40">
+        <tr className={`border-b border-border-base bg-surface-sunken/40 ${hidden}`}>
           <td colSpan={7} className="px-2 py-3">
             {note && <p className="mb-2 text-sm text-text-muted">Note: {note}</p>}
             {error && <p className="mb-2 text-sm text-danger">{error}</p>}

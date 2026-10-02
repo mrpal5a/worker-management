@@ -18,11 +18,14 @@ export interface ReportRow {
   /** Snapshot taken when the entry was recorded, not the current rate. */
   payRate: Decimal;
   otHours: Decimal;
+  /** 1 for a full day, 0.5 for a half day. */
+  dayFraction: Decimal;
 }
 
 export interface Bucket {
   id: string;
   name: string;
+  /** Days worked, counting a half day as 0.5. */
   days: number;
   otHours: Decimal;
   /**
@@ -48,8 +51,8 @@ function emptyBucket(id: string, name: string): Bucket {
   };
 }
 
-function accumulate(b: Bucket, otHours: Decimal, pay: Decimal): void {
-  b.days += 1;
+function accumulate(b: Bucket, dayFraction: Decimal, otHours: Decimal, pay: Decimal): void {
+  b.days += dayFraction.toNumber();
   b.otHours = b.otHours.plus(otHours);
   b.pay = b.pay.plus(pay);
 }
@@ -60,7 +63,7 @@ export function aggregate(rows: ReportRow[]): Aggregated {
   const byCompany = new Map<string, Bucket>();
 
   for (const r of rows) {
-    const pay = calcPay(r.payRate, r.otHours);
+    const pay = calcPay(r.payRate, r.otHours, r.dayFraction);
 
     if (!byWorker.has(r.workerId)) {
       byWorker.set(r.workerId, emptyBucket(r.workerId, r.workerName));
@@ -69,8 +72,8 @@ export function aggregate(rows: ReportRow[]): Aggregated {
       byCompany.set(r.companyId, emptyBucket(r.companyId, r.companyName));
     }
 
-    accumulate(byWorker.get(r.workerId)!, r.otHours, pay);
-    accumulate(byCompany.get(r.companyId)!, r.otHours, pay);
+    accumulate(byWorker.get(r.workerId)!, r.dayFraction, r.otHours, pay);
+    accumulate(byCompany.get(r.companyId)!, r.dayFraction, r.otHours, pay);
   }
 
   // Totals are derived from the worker buckets; every row lands in exactly one

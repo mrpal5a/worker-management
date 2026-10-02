@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { listWorkers, listCompanies, entriesForDate } from '@/lib/repo';
 import { toDateKey } from '@/lib/date';
-import { AttendanceRow } from './attendance-row';
+import { AttendanceList } from './attendance-list';
 import { DateForm } from './date-form';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeroStat } from '@/components/ui/hero-stat';
@@ -80,30 +80,22 @@ export default async function AttendancePage({
           }
         />
       ) : (
-        <>
-          {/* Column headings only make sense once the row is a grid. */}
-          <div className="hidden border-b border-border-base pb-2 text-sm font-medium text-text-muted sm:grid sm:grid-cols-[1fr_2fr_6rem] sm:gap-3">
-            <div>Worker</div>
-            <div>Company</div>
-            <div>OT hrs</div>
-          </div>
-          <ul>
-            {workers.map((w) => {
-              const e = byWorker.get(w.id);
-              return (
-                <AttendanceRow
-                  key={w.id}
-                  dateKey={dateKey}
-                  workerId={w.id}
-                  workerName={w.name}
-                  companies={companies.map((c) => ({ id: c.id, name: c.name }))}
-                  initialCompanyId={e?.company_id ?? null}
-                  initialOt={e ? String(e.ot_hours) : '0'}
-                />
-              );
-            })}
-          </ul>
-        </>
+        <AttendanceList
+          dateKey={dateKey}
+          companies={companies.map((c) => ({ id: c.id, name: c.name }))}
+          workers={workers.map((w) => {
+            const e = byWorker.get(w.id);
+            return {
+              id: w.id,
+              name: w.name,
+              phone: w.phone,
+              companyId: e?.company_id ?? null,
+              ot: e ? String(e.ot_hours) : '0',
+              dayFraction: e && Number(e.day_fraction) === 0.5 ? '0.5' : '1',
+              payRate: String(e ? e.pay_rate_snapshot : w.pay_rate),
+            };
+          })}
+        />
       )}
     </main>
   );

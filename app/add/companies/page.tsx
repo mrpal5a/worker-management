@@ -7,6 +7,7 @@ import { HeroStat } from '@/components/ui/hero-stat';
 import { TableWrap, Th } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { BriefcaseIcon } from '@/components/ui/icons';
+import { SearchScope } from '@/components/ui/search';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,19 +31,21 @@ export default async function CompaniesPage() {
       {companies.length === 0 ? (
         <EmptyState title="No companies yet" description="Add one above to get started." />
       ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th>Company</Th>
-              <Th right>Status</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {companies.map((c) => (
-              <CompanyRow key={c.id} id={c.id} name={c.name} active={c.active} />
-            ))}
-          </tbody>
-        </TableWrap>
+        <SearchScope haystacks={companies.map((c) => c.name)} placeholder="Search companies…" noun="companies">
+          <TableWrap>
+            <thead>
+              <tr>
+                <Th>Company</Th>
+                <Th right>Status</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {companies.map((c) => (
+                <CompanyRow key={c.id} id={c.id} name={c.name} active={c.active} />
+              ))}
+            </tbody>
+          </TableWrap>
+        </SearchScope>
       )}
     </main>
   );

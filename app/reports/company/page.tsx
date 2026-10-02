@@ -11,7 +11,9 @@ import { ExportLink } from '../export-link';
 import { PageHeader } from '@/components/ui/page-header';
 import { HeroStat } from '@/components/ui/hero-stat';
 import { Select } from '@/components/ui/select';
-import { TableWrap, Th, Td, Tr } from '@/components/ui/table';
+import { TableWrap, Th, Td } from '@/components/ui/table';
+import { SearchScope, SearchTr } from '@/components/ui/search';
+import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { BarChartIcon } from '@/components/ui/icons';
 
@@ -69,48 +71,61 @@ export default async function CompanyReportPage({
             >
               ← All companies
             </Link>
-            <TableWrap>
-              <thead>
-                <tr>
-                  <Th>Worker</Th>
-                  <Th right>OT hrs</Th>
-                  <Th right>Billed</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {detail.map((r) => {
-                  const bill = calcPay(r.payRate, r.otHours);
-                  return (
-                    <Tr key={r.workerId}>
-                      <Td>{r.workerName}</Td>
-                      <Td right>{hours(r.otHours)}</Td>
-                      <Td right>{money(bill)}</Td>
-                    </Tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="font-semibold">
-                  <Td>{detail.length} workers</Td>
-                  <Td right>{hours(bucket.otHours)}</Td>
-                  <Td right>{money(bucket.pay)}</Td>
-                </tr>
-              </tfoot>
-            </TableWrap>
+            <SearchScope haystacks={detail.map((r) => r.workerName)} placeholder="Search workers…" noun="workers">
+              <SearchScope haystacks={companies.map((b) => b.name)} placeholder="Search companies…" noun="companies">
+            <SearchScope
+          haystacks={detail.map((r) => `${r.workerName} ${r.dateKey}`)}
+          placeholder="Search by worker or date…"
+          noun="entries"
+        >
+          <TableWrap>
+                    <thead>
+                      <tr>
+                        <Th>Worker</Th>
+                        <Th right>OT hrs</Th>
+                        <Th right>Billed</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.map((r) => {
+                        const bill = calcPay(r.payRate, r.otHours, r.dayFraction);
+                        return (
+                          <SearchTr key={r.workerId} text={r.workerName}>
+                            <Td>
+                              {r.workerName}
+                              {r.dayFraction.lessThan(1) && <Badge tone="warning" className="ml-1.5">Half day</Badge>}
+                            </Td>
+                            <Td right>{hours(r.otHours)}</Td>
+                            <Td right>{money(bill)}</Td>
+                          </SearchTr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="font-semibold">
+                        <Td>{detail.length} workers</Td>
+                        <Td right>{hours(bucket.otHours)}</Td>
+                        <Td right>{money(bucket.pay)}</Td>
+                      </tr>
+                    </tfoot>
+                  </TableWrap>
+        </SearchScope>
+          </SearchScope>
+            </SearchScope>
           </>
         ) : (
           <TableWrap>
             <thead>
               <tr>
                 <Th>Company</Th>
-                <Th right>Workers</Th>
+                <Th right>Man-days</Th>
                 <Th right>OT hrs</Th>
                 <Th right>Billed</Th>
               </tr>
             </thead>
             <tbody>
               {companies.map((b) => (
-                <Tr key={b.id}>
+                <SearchTr key={b.id} text={b.name}>
                   <Td>
                     <Link href={`/reports/company?mode=day&date=${dateKey}&companyId=${b.id}`} className="text-accent hover:underline">
                       {b.name}
@@ -119,7 +134,7 @@ export default async function CompanyReportPage({
                   <Td right>{b.days}</Td>
                   <Td right>{hours(b.otHours)}</Td>
                   <Td right>{money(b.pay)}</Td>
-                </Tr>
+                </SearchTr>
               ))}
             </tbody>
             <tfoot>
@@ -187,14 +202,17 @@ export default async function CompanyReportPage({
           </thead>
           <tbody>
             {detail.map((r) => {
-              const bill = calcPay(r.payRate, r.otHours);
+              const bill = calcPay(r.payRate, r.otHours, r.dayFraction);
               return (
-                <Tr key={`${r.dateKey}-${r.workerId}`}>
+                <SearchTr key={`${r.dateKey}-${r.workerId}`} text={`${r.workerName} ${r.dateKey}`}>
                   <Td>{r.dateKey}</Td>
-                  <Td>{r.workerName}</Td>
+                  <Td>
+                    {r.workerName}
+                    {r.dayFraction.lessThan(1) && <Badge tone="warning" className="ml-1.5">Half day</Badge>}
+                  </Td>
                   <Td right>{hours(r.otHours)}</Td>
                   <Td right>{money(bill)}</Td>
-                </Tr>
+                </SearchTr>
               );
             })}
           </tbody>

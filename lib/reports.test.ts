@@ -7,13 +7,13 @@ const d = (v: string | number) => new Decimal(v);
 const rows: ReportRow[] = [
   { dateKey: '2026-09-01', workerId: 'w1', workerName: 'Ramesh',
     companyId: 'c1', companyName: 'Acme',
-    payRate: d(600), otHours: d(2) },
+    payRate: d(600), otHours: d(2), dayFraction: d(1) },
   { dateKey: '2026-09-02', workerId: 'w1', workerName: 'Ramesh',
     companyId: 'c2', companyName: 'Globex',
-    payRate: d(600), otHours: d(0) },
+    payRate: d(600), otHours: d(0), dayFraction: d(1) },
   { dateKey: '2026-09-01', workerId: 'w2', workerName: 'Suresh',
     companyId: 'c1', companyName: 'Acme',
-    payRate: d(500), otHours: d(0) },
+    payRate: d(500), otHours: d(0), dayFraction: d(1) },
 ];
 
 describe('aggregate', () => {
@@ -74,5 +74,17 @@ describe('aggregate', () => {
       { ...rows[0], dateKey: '2026-09-20', otHours: d(0), payRate: d(700) },
     ];
     expect(aggregate(raised).byWorker.get('w1')!.pay.toString()).toBe('1300');
+  });
+
+  it('counts a half day as half a day and half the day rate', () => {
+    const half: ReportRow[] = [
+      { ...rows[0], otHours: d(0), dayFraction: d(1) },
+      { ...rows[0], dateKey: '2026-09-21', otHours: d(0), dayFraction: d('0.5') },
+    ];
+    const r = aggregate(half);
+    expect(r.byWorker.get('w1')!.days).toBe(1.5);
+    expect(r.byWorker.get('w1')!.pay.toString()).toBe('900');
+    expect(r.byCompany.get('c1')!.days).toBe(1.5);
+    expect(r.totals.days).toBe(1.5);
   });
 });

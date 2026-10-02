@@ -7,6 +7,7 @@ import { HeroStat } from '@/components/ui/hero-stat';
 import { TableWrap, Th } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { UsersIcon } from '@/components/ui/icons';
+import { SearchScope } from '@/components/ui/search';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,28 +31,34 @@ export default async function WorkersPage() {
       {workers.length === 0 ? (
         <EmptyState title="No workers yet" description="Add one above to get started." />
       ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th>Name</Th>
-              <Th>Phone</Th>
-              <Th right>Day rate</Th>
-              <Th right>Status</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {workers.map((w) => (
-              <WorkerRow
-                key={w.id}
-                id={w.id}
-                name={w.name}
-                phone={w.phone}
-                payRate={w.pay_rate}
-                active={w.active}
-              />
-            ))}
-          </tbody>
-        </TableWrap>
+        <SearchScope
+          haystacks={workers.map((w) => `${w.name} ${w.phone ?? ''}`)}
+          placeholder="Search workers by name or phone…"
+          noun="workers"
+        >
+          <TableWrap>
+            <thead>
+              <tr>
+                <Th>Name</Th>
+                <Th>Phone</Th>
+                <Th right>Day rate</Th>
+                <Th right>Status</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {workers.map((w) => (
+                <WorkerRow
+                  key={w.id}
+                  id={w.id}
+                  name={w.name}
+                  phone={w.phone}
+                  payRate={w.pay_rate}
+                  active={w.active}
+                />
+              ))}
+            </tbody>
+          </TableWrap>
+        </SearchScope>
       )}
     </main>
   );

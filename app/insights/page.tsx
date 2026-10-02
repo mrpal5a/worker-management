@@ -69,7 +69,7 @@ export default async function InsightsPage() {
 
   const dailyTotals = new Map<string, Decimal>();
   for (const r of currentRows) {
-    const pay = calcPay(r.payRate, r.otHours);
+    const pay = calcPay(r.payRate, r.otHours, r.dayFraction);
     dailyTotals.set(r.dateKey, (dailyTotals.get(r.dateKey) ?? new Decimal(0)).plus(pay));
   }
   const dailyPoints = [...dailyTotals.entries()]

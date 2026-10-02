@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Td, Tr } from '@/components/ui/table';
+import { useSearchMatch } from '@/components/ui/search';
 import { toDecimal } from '@/lib/num';
 import { money } from '@/lib/format';
 import type { Numeric } from '@/lib/supabase';
@@ -22,6 +23,7 @@ export function WorkerRow({ id, name, phone, payRate, active }: Props) {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const hidden = useSearchMatch(`${name} ${phone ?? ''}`) ? '' : 'hidden';
 
   function onSave(formData: FormData) {
     setError(null);
@@ -37,7 +39,7 @@ export function WorkerRow({ id, name, phone, payRate, active }: Props) {
 
   if (editing) {
     return (
-      <tr className="border-b border-border-base bg-accent-soft/40">
+      <tr className={`border-b border-border-base bg-accent-soft/40 ${hidden}`}>
         <td colSpan={4} className="py-2.5">
           <form action={onSave} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <Input name="name" defaultValue={name} required placeholder="Name" className="flex-1 sm:min-w-36" />
@@ -68,7 +70,7 @@ export function WorkerRow({ id, name, phone, payRate, active }: Props) {
   }
 
   return (
-    <Tr dim={!active}>
+    <Tr dim={!active} className={hidden}>
       <Td>{name}</Td>
       <Td>{phone ?? '—'}</Td>
       <Td right>{money(toDecimal(payRate))}</Td>

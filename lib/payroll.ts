@@ -21,26 +21,36 @@ import Decimal from 'decimal.js';
 /** A standard working day. Overtime is paid per hour beyond this. */
 export const STANDARD_HOURS = new Decimal(8);
 
+/** Share of the day rate earned for a full day and for a half day. */
+export const FULL_DAY = new Decimal(1);
+export const HALF_DAY = new Decimal('0.5');
+
 export interface EntryRates {
   /** Rate snapshot taken when the attendance row was created. */
   payRate: Decimal;
   otHours: Decimal;
+  /** 1 for a full day, 0.5 for a half day. */
+  dayFraction: Decimal;
 }
 
 /**
- * Pay for one full day plus overtime — also what the company that day is
- * owed, since billing mirrors pay exactly.
+ * Pay for one day plus overtime — also what the company that day is owed,
+ * since billing mirrors pay exactly.
  *
- * Overtime carries no premium: an OT hour is the plain hourly equivalent of
- * the daily rate, i.e. rate ÷ 8.
+ * A half day earns half the day rate (`dayFraction` 0.5). Overtime carries no
+ * premium and is unaffected by a half day: an OT hour is the plain hourly
+ * equivalent of the full daily rate, i.e. rate ÷ 8.
+ *
+ * `dayFraction` is required rather than defaulted so that no caller can
+ * silently pay a half day as a full one.
  */
-export function calcPay(payRate: Decimal, otHours: Decimal): Decimal {
-  return payRate.plus(payRate.dividedBy(STANDARD_HOURS).times(otHours));
+export function calcPay(payRate: Decimal, otHours: Decimal, dayFraction: Decimal): Decimal {
+  return payRate.times(dayFraction).plus(payRate.dividedBy(STANDARD_HOURS).times(otHours));
 }
 
 /** Pay for a single attendance entry. */
 export function calcEntry(rates: EntryRates): { pay: Decimal } {
-  return { pay: calcPay(rates.payRate, rates.otHours) };
+  return { pay: calcPay(rates.payRate, rates.otHours, rates.dayFraction) };
 }
 
 /** Sum a list of Decimals, returning 0 for an empty list. */

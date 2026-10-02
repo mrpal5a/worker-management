@@ -11,6 +11,7 @@ import { StatCard } from '@/components/ui/stat-card';
 import { TableWrap, Th } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { WalletIcon, UsersIcon, CreditCardIcon, ClockIcon } from '@/components/ui/icons';
+import { SearchScope } from '@/components/ui/search';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,37 +50,43 @@ export default async function AdvancesPage() {
       {summaries.length === 0 ? (
         <EmptyState title="No advances yet" description="Add one above to start tracking it." />
       ) : (
-        <TableWrap>
-          <thead>
-            <tr>
-              <Th>Worker</Th>
-              <Th right>Taken</Th>
-              <Th right>Paid</Th>
-              <Th right>Balance</Th>
-              <Th right>Monthly</Th>
-              <Th right>Status</Th>
-              <Th right>Actions</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {summaries.map(({ advance }) => (
-              <AdvanceRow
-                key={advance.id}
-                id={advance.id}
-                workerName={advance.workers?.name ?? '(deleted worker)'}
-                principal={advance.principal}
-                monthlyDeduction={advance.monthly_deduction}
-                note={advance.note}
-                payments={advance.advance_payments.map((p) => ({
-                  id: p.id,
-                  paidOn: p.paid_on,
-                  amount: p.amount,
-                  note: p.note,
-                }))}
-              />
-            ))}
-          </tbody>
-        </TableWrap>
+        <SearchScope
+          haystacks={summaries.map(({ advance }) => `${advance.workers?.name ?? '(deleted worker)'} ${advance.note ?? ''}`)}
+          placeholder="Search advances by worker or note…"
+          noun="advances"
+        >
+          <TableWrap>
+            <thead>
+              <tr>
+                <Th>Worker</Th>
+                <Th right>Taken</Th>
+                <Th right>Paid</Th>
+                <Th right>Balance</Th>
+                <Th right>Monthly</Th>
+                <Th right>Status</Th>
+                <Th right>Actions</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {summaries.map(({ advance }) => (
+                <AdvanceRow
+                  key={advance.id}
+                  id={advance.id}
+                  workerName={advance.workers?.name ?? '(deleted worker)'}
+                  principal={advance.principal}
+                  monthlyDeduction={advance.monthly_deduction}
+                  note={advance.note}
+                  payments={advance.advance_payments.map((p) => ({
+                    id: p.id,
+                    paidOn: p.paid_on,
+                    amount: p.amount,
+                    note: p.note,
+                  }))}
+                />
+              ))}
+            </tbody>
+          </TableWrap>
+        </SearchScope>
       )}
     </main>
   );

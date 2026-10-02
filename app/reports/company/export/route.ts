@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       b.otHours.toString(),
       b.pay.toFixed(2),
     ]);
-    const csv = toCsv(['Date', 'Company', 'Workers', 'OT hours', 'Billed (INR)'], csvRows);
+    const csv = toCsv(['Date', 'Company', 'Man-days', 'OT hours', 'Billed (INR)'], csvRows);
 
     return new Response(csv, {
       headers: {
@@ -49,10 +49,11 @@ export async function GET(request: NextRequest) {
   const csvRows = detail.map((r) => [
     r.dateKey,
     r.workerName,
+    r.dayFraction.lessThan(1) ? 'Half' : 'Full',
     r.otHours.toString(),
-    calcPay(r.payRate, r.otHours).toFixed(2),
+    calcPay(r.payRate, r.otHours, r.dayFraction).toFixed(2),
   ]);
-  const csv = toCsv(['Date', 'Worker', 'OT hours', 'Billed (INR)'], csvRows);
+  const csv = toCsv(['Date', 'Worker', 'Day', 'OT hours', 'Billed (INR)'], csvRows);
   const safeName = companyName.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
 
   return new Response(csv, {

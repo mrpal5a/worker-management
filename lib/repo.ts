@@ -123,6 +123,7 @@ export async function upsertEntry(input: {
   workerId: string;
   companyId: string;
   otHours: string;
+  dayFraction: string;
   payRateSnapshot: string;
 }): Promise<void> {
   const { error } = await getSupabase().from('entries').upsert(
@@ -131,6 +132,7 @@ export async function upsertEntry(input: {
       worker_id: input.workerId,
       company_id: input.companyId,
       ot_hours: input.otHours,
+      day_fraction: input.dayFraction,
       pay_rate_snapshot: input.payRateSnapshot,
     },
     { onConflict: 'date,worker_id' },
@@ -179,6 +181,8 @@ async function loadEntriesBetween(startKey: string, endKeyExclusive: string): Pr
     companyName: e.companies?.name ?? '(deleted company)',
     payRate: toDecimal(e.pay_rate_snapshot),
     otHours: toDecimal(e.ot_hours),
+    // Rows written before migration 0005 have no day_fraction; they were full days.
+    dayFraction: toDecimal(e.day_fraction ?? 1),
   }));
 }
 

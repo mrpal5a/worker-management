@@ -5,6 +5,10 @@ import * as repo from '@/lib/repo';
 
 export type AttendanceResult = { ok: true } | { error: string };
 
+/** Day fractions the UI may send: a full day or a half day. */
+const DAY_FRACTIONS = ['1', '0.5'] as const;
+export type DayFraction = (typeof DAY_FRACTIONS)[number];
+
 /**
  * Assign a worker to a company for one date, or update an existing assignment.
  *
@@ -17,6 +21,7 @@ export async function setAttendance(
   workerId: string,
   companyId: string,
   otHoursRaw: string,
+  dayFraction: DayFraction,
 ): Promise<AttendanceResult> {
   const trimmed = (otHoursRaw ?? '').trim();
   const otHours = trimmed === '' ? '0' : trimmed;
@@ -24,6 +29,7 @@ export async function setAttendance(
 
   if (!Number.isFinite(n) || n < 0) return { error: 'Overtime must be zero or more.' };
   if (n > 24) return { error: 'Overtime cannot exceed 24 hours in a day.' };
+  if (!DAY_FRACTIONS.includes(dayFraction)) return { error: 'Choose a full or half day.' };
 
   const [worker, company] = await Promise.all([
     repo.getWorker(workerId),
@@ -38,6 +44,7 @@ export async function setAttendance(
     workerId,
     companyId,
     otHours,
+    dayFraction,
     payRateSnapshot: String(worker.pay_rate),
   });
 
